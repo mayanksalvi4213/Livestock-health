@@ -574,4 +574,5 @@ def inject_globals():
     }
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # bind to 0.0.0.0 so Docker can expose it outside
+    app.run(host="0.0.0.0", port=5000, debug=True)

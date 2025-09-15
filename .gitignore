@@ -17,3 +17,10 @@ tmp_uploads/
 # Ignore SQLite db if you don’t want to push it
 # *.db
 # instance/
+
+# Docker
+*.tar
+docker-compose.override.yml
+.docker/
+.dockerignore
+
