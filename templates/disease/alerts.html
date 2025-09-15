@@ -1,0 +1,852 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.disease_alert_center }} | AgriHealth{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/disease_alerts.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header bg-gradient-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h1 class="mb-2">{{ t.disease_alert_center }}</h1>
+                <p class="lead mb-0">{{ t.monitor_outbreaks }}</p>
+            </div>
+            <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                <button onclick="refreshAlerts()" class="btn btn-light">
+                    <i class="fas fa-sync-alt me-2"></i> {{ t.refresh_data }}
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container for notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<div class="container my-4">
+    {% if not farm or not farm.latitude or not farm.longitude %}
+    <!-- Farm Location Not Available Alert -->
+    <div class="alert alert-warning" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>{{ t.farm_info_not_available }}</strong> - {{ t.please_update_your_farm_location }}
+        <a href="{{ url_for('profile.farm_profile') }}" class="alert-link">{{ t.update_farm_profile }}</a>
+    </div>
+    {% endif %}
+    
+    <!-- Current Weather Information Card (Real-time data) -->
+    {% if farm and farm.latitude and farm.longitude %}
+    <div class="card mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-cloud-sun me-2"></i> {{ t.current_weather_conditions }}</h5>
+            <small class="text-muted">{{ t.last_updated }}: <span id="weather-updated-time">--:--</span></small>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    <div id="weather-icon" class="weather-icon mb-2">
+                        <i class="fas fa-cloud-sun fa-3x text-primary"></i>
+                    </div>
+                    <h3 id="weather-temp" class="mb-0">--°C</h3>
+                    <p id="weather-description" class="text-muted">{{ t.loading_weather_data }}</p>
+                </div>
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-sm-4 mb-3">
+                            <div class="weather-detail">
+                                <i class="fas fa-tint text-primary me-2"></i>
+                                <span>{{ t.humidity }}: <strong id="weather-humidity">--%</strong></span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <div class="weather-detail">
+                                <i class="fas fa-wind text-primary me-2"></i>
+                                <span>{{ t.wind }}: <strong id="weather-wind">-- km/h</strong></span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <div class="weather-detail">
+                                <i class="fas fa-cloud-rain text-primary me-2"></i>
+                                <span>{{ t.precipitation }}: <strong id="weather-rain">-- mm</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="weather-risk-message">{{ t.weather_risk_loading }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <!-- Left Column: Alerts and Map -->
+        <div class="col-lg-8">
+            <!-- Animal Health Risk Cards -->
+            <div class="row mb-4" id="animal-health-risk-cards">
+                <!-- Cow Health Risks -->
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="alert-summary">
+                                <div class="alert-summary-icon">
+                                    <i class="fas fa-cow text-primary"></i>
+                                </div>
+                                <div class="text-end">
+                                    <div class="alert-summary-count" id="cow-risk-level">
+                                        --
+                                    </div>
+                                    <div class="alert-summary-label text-dark">Cows Health Risk</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Goat Health Risks -->
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="alert-summary">
+                                <div class="alert-summary-icon">
+                                    <i class="fas fa-kiwi-bird text-primary"></i>
+                                </div>
+                                <div class="text-end">
+                                    <div class="alert-summary-count" id="goat-risk-level">
+                                        --
+                                    </div>
+                                    <div class="alert-summary-label text-dark">Goats Health Risk</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chicken Health Risks -->
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="alert-summary">
+                                <div class="alert-summary-icon">
+                                    <i class="fas fa-feather text-primary"></i>
+                                </div>
+                                <div class="text-end">
+                                    <div class="alert-summary-count" id="chicken-risk-level">
+                                        --
+                                    </div>
+                                    <div class="alert-summary-label text-dark">Chickens Health Risk</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+            
+            {% if disease_risks %}
+                <div class="row">
+                {% for risk in disease_risks %}
+                    <div class="col-md-6 alert-item" data-risk="{{ risk.risk_level }}" data-location="{{ 'local' if risk.distance|default(0) < 20 else 'nearby' }}" data-animal="{{ risk.affected_animals|join(',') }}">
+                        <div class="card alert-card alert-{{ risk.risk_level }}">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="disease-icon bg-light">
+                                        <i class="fas fa-virus"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-1">{{ risk.disease_name }}</h5>
+                                        <span class="badge bg-{{ 'danger' if risk.risk_level == 'high' else 'warning' if risk.risk_level == 'medium' else 'info' }} rounded-pill">{{ risk.risk_score }}% {{ t[risk.risk_level + '_risk'] }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <div class="small text-muted">{{ t.affected_animals }}:</div>
+                                    <p>{{ risk.affected_animals|join(', ')|title }}</p>
+                                </div>
+                                
+                                <div class="risk-gauge">
+                                    <div class="risk-gauge-fill bg-{{ 'danger' if risk.risk_level == 'high' else 'warning' if risk.risk_level == 'medium' else 'info' }}" style="width: {{ risk.risk_score }}%;"></div>
+                                </div>
+                                
+                                <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#diseaseModal" data-disease="{{ risk.disease_name }}">
+                                    {{ t.view_details }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <!-- Alert info removed as requested -->
+            {% endif %}
+            
+            {% if nearby_outbreaks %}
+                <div class="row">
+                {% for outbreak in nearby_outbreaks %}
+                    <div class="col-md-6 alert-item" data-risk="{{ outbreak.severity|lower }}" data-location="{{ 'local' if outbreak.distance < 20 else 'nearby' }}">
+                        <div class="card alert-card alert-{{ outbreak.severity|lower }}">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="disease-icon bg-light">
+                                        <i class="fas fa-biohazard"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-1">{{ outbreak.disease_name }}</h5>
+                                        <span class="badge bg-{{ 'danger' if outbreak.severity|lower == 'high' else 'warning' if outbreak.severity|lower == 'medium' else 'info' }} rounded-pill">{{ outbreak.severity }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <div class="outbreak-location">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>{{ outbreak.location }}, {{ outbreak.district }}</span>
+                                    </div>
+                                    <div class="small text-muted mt-1">
+                                        <i class="fas fa-calendar-alt me-1"></i> {{ outbreak.reported_date.strftime('%d %b %Y') }}
+                                    </div>
+                                    <div class="small text-muted mt-1">
+                                        <i class="fas fa-route me-1"></i> {{ outbreak.distance|round(1) }} km {{ t.away }}
+                                    </div>
+                                </div>
+                                
+                                <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#outbreakModal" data-outbreak-id="{{ outbreak.id }}">
+                                    {{ t.view_details }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <!-- No current outbreaks alert removed as requested -->
+            {% endif %}
+            
+            <!-- Map Section -->
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i> {{ t.disease_map }}</h5>
+                </div>
+                <div class="card-body">
+                    <div id="map" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+                    <div class="mt-3 small text-muted">
+                        <i class="fas fa-info-circle me-1"></i> {{ t.map_shows_disease_outbreaks_near_farm }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column: Prevention Tips and Resources -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <!-- Prevention Tips Card -->
+            <div class="card mb-4 sticky-top">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i> {{ t.preventive_measures }}</h5>
+                </div>
+                <div class="card-body" id="preventive-measures-container">
+                    <div class="d-flex mb-3">
+                        <div class="prevention-tip-icon">
+                            <i class="fas fa-syringe"></i>
+                        </div>
+                        <div>
+                            <h6>{{ t.vaccination }}</h6>
+                            <p class="small text-muted mb-0">{{ t.ensure_regular_vaccination }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="prevention-tip-icon">
+                            <i class="fas fa-handshake-slash"></i>
+                        </div>
+                        <div>
+                            <h6>{{ t.biosecurity }}</h6>
+                            <p class="small text-muted mb-0">{{ t.implement_strict_biosecurity }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="prevention-tip-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div>
+                            <h6>{{ t.nutrition }}</h6>
+                            <p class="small text-muted mb-0">{{ t.maintain_balanced_nutrition }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="prevention-tip-icon">
+                            <i class="fas fa-pump-soap"></i>
+                        </div>
+                        <div>
+                            <h6>{{ t.hygiene }}</h6>
+                            <p class="small text-muted mb-0">{{ t.maintain_cleanliness }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex">
+                        <div class="prevention-tip-icon">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <div>
+                            <h6>{{ t.regular_monitoring }}</h6>
+                            <p class="small text-muted mb-0">{{ t.check_animals_daily }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-primary" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ t.disease_alert_description }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disease Information Modal -->
+<div class="modal fade" id="diseaseModal" tabindex="-1" aria-labelledby="diseaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="diseaseModalLabel">{{ t.disease_information }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body disease-info-content">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary download-prevention">
+                    <i class="fas fa-download me-2"></i> {{ t.prevention_guide }}
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.close }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Outbreak Information Modal -->
+<div class="modal fade" id="outbreakModal" tabindex="-1" aria-labelledby="outbreakModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="outbreakModalLabel">{{ t.outbreak_details }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body outbreak-info-content">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.close }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weather Risk Factors Modal -->
+<div class="modal fade" id="weatherRiskModal" tabindex="-1" aria-labelledby="weatherRiskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="weatherRiskModalLabel">{{ t.weather_risk_factors }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ t.weather_risk_description }}
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ t.weather_factor }}</th>
+                                <th>{{ t.risk_impact }}</th>
+                                <th>{{ t.affected_diseases }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-temperature-high me-2 text-danger"></i> {{ t.high_temperature }}</td>
+                                <td>{{ t.high_temp_impact }}</td>
+                                <td>{{ t.fmd }}, {{ t.anthrax }}, {{ t.mastitis }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-tint me-2 text-primary"></i> {{ t.high_humidity }}</td>
+                                <td>{{ t.high_humidity_impact }}</td>
+                                <td>{{ t.mastitis }}, {{ t.fmd }}, {{ t.hs }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-cloud-rain me-2 text-info"></i> {{ t.heavy_rainfall }}</td>
+                                <td>{{ t.heavy_rainfall_impact }}</td>
+                                <td>{{ t.black_quarter }}, {{ t.hs }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-bug me-2 text-success"></i> {{ t.vector_activity }}</td>
+                                <td>{{ t.vector_impact }}</td>
+                                <td>{{ t.bluetongue }}, {{ t.theileriosis }}, {{ t.babesiosis }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-cloud-sun me-2 text-warning"></i> {{ t.seasonal_changes }}</td>
+                                <td>{{ t.seasonal_impact }}</td>
+                                <td>{{ t.all_diseases }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.close }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/disease_alerts.js') }}"></script>
+<!-- Google Maps API with provided key -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBu2-A5dCNjUj53YtTd91bXsZC__az5WqM&callback=initMap" async defer></script>
+
+<script>
+    // Initialize map when Google Maps API is loaded
+    function initMap() {
+        const mapDiv = document.getElementById("map");
+        if (!mapDiv) return;
+        
+        {% if farm and farm.latitude and farm.longitude %}
+        // Farm coordinates
+        const farmCoords = { 
+            lat: {{ farm.latitude }}, 
+            lng: {{ farm.longitude }} 
+        };
+        
+        // Initialize map centered on farm
+        const map = new google.maps.Map(mapDiv, {
+            zoom: 10,
+            center: farmCoords,
+            mapTypeId: "roadmap"
+        });
+        
+        // Add farm marker
+        const farmMarker = new google.maps.Marker({
+            position: farmCoords,
+            map: map,
+            title: "{{ farm.name or 'Your Farm' }}",
+            icon: {
+                url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                scaledSize: new google.maps.Size(40, 40)
+            }
+        });
+        
+        // Add farm radius circle (50km)
+        const farmCircle = new google.maps.Circle({
+            strokeColor: "#4CAF50",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#4CAF50",
+            fillOpacity: 0.1,
+            map: map,
+            center: farmCoords,
+            radius: 50000 // 50km in meters
+        });
+        
+        // Add outbreak markers if any
+        {% for outbreak in nearby_outbreaks %}
+        {% if outbreak.latitude and outbreak.longitude %}
+        const outbreakPos{{ loop.index }} = { 
+            lat: {{ outbreak.latitude }}, 
+            lng: {{ outbreak.longitude }} 
+        };
+        
+        // Determine marker color based on severity
+        let outbreakIconUrl = "https://maps.google.com/mapfiles/ms/icons/";
+        {% if outbreak.severity == 'High' %}
+        outbreakIconUrl += "red-dot.png";
+        {% elif outbreak.severity == 'Medium' %}
+        outbreakIconUrl += "yellow-dot.png";
+        {% else %}
+        outbreakIconUrl += "blue-dot.png";
+        {% endif %}
+        
+        const outbreakMarker{{ loop.index }} = new google.maps.Marker({
+            position: outbreakPos{{ loop.index }},
+            map: map,
+            title: "{{ outbreak.disease_name }}",
+            icon: {
+                url: outbreakIconUrl,
+                scaledSize: new google.maps.Size(32, 32)
+            }
+        });
+        
+        // Add click listener to show outbreak details
+        outbreakMarker{{ loop.index }}.addListener("click", function() {
+            const modalBtn = document.querySelector('[data-bs-target="#outbreakModal"]');
+            if (modalBtn) {
+                modalBtn.setAttribute('data-outbreak-id', '{{ outbreak.id }}');
+                modalBtn.click();
+            }
+        });
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        // No farm data available
+        mapDiv.innerHTML = '<div class="alert alert-warning m-3">Farm location not available</div>';
+        {% endif %}
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load weather data
+        {% if farm and farm.latitude and farm.longitude %}
+        loadWeatherData({{ farm.latitude }}, {{ farm.longitude }});
+        {% endif %}
+    });
+    
+    function loadWeatherData(lat, lon) {
+        fetch(`/api/disease-alerts/weather?lat=${lat}&lon=${lon}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update weather elements with fetched data
+                document.getElementById('weather-temp').textContent = data.current.temp + '°C';
+                document.getElementById('weather-humidity').textContent = data.current.humidity + '%';
+                document.getElementById('weather-wind').textContent = data.current.wind_speed + ' km/h';
+                document.getElementById('weather-rain').textContent = (data.daily[0].rain || 0) + ' mm';
+                document.getElementById('weather-description').textContent = data.current.weather[0].description;
+                
+                // Update weather icon using FontAwesome instead of image
+                const weatherCondition = data.current.weather[0].description.toLowerCase();
+                let iconClass = 'fa-cloud-sun';
+                
+                // Map weather conditions to appropriate FontAwesome icons
+                if (weatherCondition.includes('rain') || weatherCondition.includes('drizzle')) {
+                    iconClass = 'fa-cloud-rain';
+                } else if (weatherCondition.includes('thunder') || weatherCondition.includes('storm')) {
+                    iconClass = 'fa-bolt';
+                } else if (weatherCondition.includes('snow')) {
+                    iconClass = 'fa-snowflake';
+                } else if (weatherCondition.includes('mist') || weatherCondition.includes('fog')) {
+                    iconClass = 'fa-smog';
+                } else if (weatherCondition.includes('clear')) {
+                    iconClass = 'fa-sun';
+                } else if (weatherCondition.includes('cloud')) {
+                    iconClass = 'fa-cloud';
+                }
+                
+                document.getElementById('weather-icon').innerHTML = 
+                    '<i class="fas ' + iconClass + ' fa-3x text-primary"></i>';
+                
+                // Update risk message
+                document.getElementById('weather-risk-message').textContent = 
+                    'Current conditions: ' + (data.risk_message || 'Weather conditions are generally favorable for livestock health.');
+                
+                // Update last updated time
+                const now = new Date();
+                document.getElementById('weather-updated-time').textContent = 
+                    now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+                    
+                // Generate temperature-based health issues for different livestock
+                const temp = data.current.temp;
+                const humidity = data.current.humidity;
+                
+                // Container for health issues content
+                let healthIssuesHtml = '<div class="temperature-health-issues">'+
+                                      '<h6><i class="fas fa-thermometer-half me-2"></i>Temperature-related Health Concerns</h6>';
+                
+                // Cows health issues based on temperature
+                healthIssuesHtml += '<div class="animal-health-issue">'+
+                                   '<h6><i class="fas fa-cow me-1"></i> Cows</h6>';
+                
+                if (temp > 35) {
+                    healthIssuesHtml += '<p>⚠️ High heat stress risk. Watch for reduced feed intake, panting, and decreased milk production.</p>'+
+                                       '<p>🔍 Preventive measures: Provide shade, cooling fans, and plenty of fresh water. Adjust feeding times to cooler parts of the day.</p>';
+                } else if (temp > 28) {
+                    healthIssuesHtml += '<p>⚠️ Moderate heat stress risk. May impact reproduction and milk quality.</p>'+
+                                       '<p>🔍 Preventive measures: Ensure adequate ventilation and water access. Consider nutritional adjustments.</p>';
+                } else if (temp < 5) {
+                    healthIssuesHtml += '<p>⚠️ Cold stress risk, especially for calves. Watch for increased energy needs.</p>'+
+                                       '<p>🔍 Preventive measures: Provide wind breaks, increase feed energy, and ensure dry bedding.</p>';
+                } else {
+                    healthIssuesHtml += '<p>✓ Current temperature is within comfortable range for cattle.</p>'+
+                                       '<p>🔍 Maintain regular care practices and monitoring.</p>';
+                }
+                healthIssuesHtml += '</div>';
+                
+                // Goats health issues
+                healthIssuesHtml += '<div class="animal-health-issue">'+
+                                   '<h6><i class="fas fa-kiwi-bird me-1"></i> Goats</h6>';
+                
+                if (temp > 32) {
+                    healthIssuesHtml += '<p>⚠️ Heat stress risk. May lead to reduced feed intake and reproductive issues.</p>'+
+                                       '<p>🔍 Preventive measures: Provide shade, ventilation, and clean water. Monitor for signs of distress.</p>';
+                } else if (temp < 7) {
+                    healthIssuesHtml += '<p>⚠️ Cold stress risk, especially for kids and pregnant does.</p>'+
+                                       '<p>🔍 Preventive measures: Provide shelter from wind and rain, increase nutrition.</p>';
+                } else {
+                    healthIssuesHtml += '<p>✓ Current temperature is within comfortable range for goats.</p>'+
+                                       '<p>🔍 Maintain regular health checks and parasite control.</p>';
+                }
+                healthIssuesHtml += '</div>';
+                
+                // Chickens health issues
+                healthIssuesHtml += '<div class="animal-health-issue">'+
+                                   '<h6><i class="fas fa-feather me-1"></i> Chickens</h6>';
+                
+                if (temp > 30) {
+                    healthIssuesHtml += '<p>⚠️ Heat stress risk. Can cause reduced egg production and quality.</p>'+
+                                       '<p>🔍 Preventive measures: Provide shade, increase air flow, and ensure constant access to cool water.</p>';
+                } else if (temp < 10) {
+                    healthIssuesHtml += '<p>⚠️ Cold stress can increase susceptibility to respiratory diseases.</p>'+
+                                       '<p>🔍 Preventive measures: Insulate coop, prevent drafts while maintaining ventilation, provide extra feed.</p>';
+                } else {
+                    healthIssuesHtml += '<p>✓ Current temperature is within ideal range for poultry.</p>'+
+                                       '<p>🔍 Maintain regular biosecurity measures and health monitoring.</p>';
+                }
+                healthIssuesHtml += '</div>';
+                
+                healthIssuesHtml += '</div>';
+                
+                // Add health issues to the weather card
+                document.querySelector('.card-body .row').insertAdjacentHTML('afterend', healthIssuesHtml);
+                
+                // Update the preventive measures panel with temperature-specific measures
+                function updatePreventiveMeasures(temp, humidity) {
+                    const container = document.getElementById('preventive-measures-container');
+                    if (!container) return;
+                    
+                    // Clear existing content
+                    container.innerHTML = '';
+                    
+                    // Common measures - always show
+                    let measures = [
+                        {
+                            icon: 'fas fa-syringe',
+                            title: 'Vaccination',
+                            description: 'Keep vaccinations up-to-date regardless of weather conditions.'
+                        },
+                        {
+                            icon: 'fas fa-handshake-slash',
+                            title: 'Biosecurity',
+                            description: 'Restrict animal movement, control visitor access, and disinfect equipment.'
+                        }
+                    ];
+                    
+                    // Temperature-specific measures
+                    if (temp > 30) {
+                        // Hot weather
+                        measures.push(
+                            {
+                                icon: 'fas fa-tint',
+                                title: 'Hydration',
+                                description: 'Ensure continuous access to fresh, cool water. Increase water points during hot weather.'
+                            },
+                            {
+                                icon: 'fas fa-umbrella-beach',
+                                title: 'Shade & Cooling',
+                                description: 'Provide adequate shade. Consider installing fans or misters in enclosed housing.'
+                            },
+                            {
+                                icon: 'fas fa-utensils',
+                                title: 'Heat-Adapted Feeding',
+                                description: 'Feed during cooler hours. Consider increasing electrolytes and adjusting feed composition.'
+                            }
+                        );
+                    } else if (temp < 10) {
+                        // Cold weather
+                        measures.push(
+                            {
+                                icon: 'fas fa-house-user',
+                                title: 'Shelter',
+                                description: 'Provide windbreaks and dry, draft-free housing. Ensure adequate insulation.'
+                            },
+                            {
+                                icon: 'fas fa-utensils',
+                                title: 'Cold-Weather Nutrition',
+                                description: 'Increase feed energy density to help animals maintain body temperature.'
+                            },
+                            {
+                                icon: 'fas fa-bed',
+                                title: 'Bedding',
+                                description: 'Provide extra dry bedding material to help animals conserve body heat.'
+                            }
+                        );
+                    } else {
+                        // Moderate temperature
+                        measures.push(
+                            {
+                                icon: 'fas fa-utensils',
+                                title: 'Balanced Nutrition',
+                                description: 'Maintain high-quality, balanced feed appropriate for each animal species and age.'
+                            },
+                            {
+                                icon: 'fas fa-pump-soap',
+                                title: 'Hygiene',
+                                description: 'Regularly clean living areas and equipment to prevent disease spread.'
+                            }
+                        );
+                    }
+                    
+                    // Add humidity-related measures if humidity is high
+                    if (humidity > 75) {
+                        measures.push({
+                            icon: 'fas fa-wind',
+                            title: 'Ventilation',
+                            description: 'Ensure proper air flow to reduce humidity and prevent respiratory issues.'
+                        });
+                    }
+                    
+                    // Render all measures to the container
+                    measures.forEach(measure => {
+                        const measureHtml = `
+                            <div class="d-flex mb-3">
+                                <div class="prevention-tip-icon">
+                                    <i class="${measure.icon}"></i>
+                                </div>
+                                <div>
+                                    <h6>${measure.title}</h6>
+                                    <p class="small text-muted mb-0">${measure.description}</p>
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', measureHtml);
+                    });
+                }
+                
+                // Call the function with current temperature and humidity
+                updatePreventiveMeasures(temp, humidity);
+                
+                // Update the animal health risk summary cards
+                function updateAnimalHealthRisks(temp) {
+                    // Calculate risk levels for each animal type based on temperature
+                    let cowRiskLevel = 'Low';
+                    let cowIconColor = 'text-info';
+                    
+                    let goatRiskLevel = 'Low';
+                    let goatIconColor = 'text-info';
+                    
+                    let chickenRiskLevel = 'Low';
+                    let chickenIconColor = 'text-info';
+                    
+                    // Cow risk assessment
+                    if (temp > 35) {
+                        cowRiskLevel = 'High';
+                        cowIconColor = 'text-danger';
+                    } else if (temp > 28 || temp < 5) {
+                        cowRiskLevel = 'Medium';
+                        cowIconColor = 'text-warning';
+                    }
+                    
+                    // Goat risk assessment
+                    if (temp > 32) {
+                        goatRiskLevel = 'High';
+                        goatIconColor = 'text-danger';
+                    } else if (temp < 7) {
+                        goatRiskLevel = 'Medium';
+                        goatIconColor = 'text-warning';
+                    }
+                    
+                    // Chicken risk assessment
+                    if (temp > 30) {
+                        chickenRiskLevel = 'High';
+                        chickenIconColor = 'text-danger';
+                    } else if (temp < 10) {
+                        chickenRiskLevel = 'Medium';
+                        chickenIconColor = 'text-warning';
+                    }
+                    
+                    // Update the DOM elements
+                    // Cows
+                    document.getElementById('cow-risk-level').textContent = cowRiskLevel;
+                    const cowIcon = document.querySelector('.alert-summary-icon .fa-cow');
+                    if (cowIcon) {
+                        cowIcon.className = cowIcon.className.replace(/text-\w+/, cowIconColor);
+                    }
+                    
+                    // Goats
+                    document.getElementById('goat-risk-level').textContent = goatRiskLevel;
+                    const goatIcon = document.querySelector('.alert-summary-icon .fa-kiwi-bird');
+                    if (goatIcon) {
+                        goatIcon.className = goatIcon.className.replace(/text-\w+/, goatIconColor);
+                    }
+                    
+                    // Chickens
+                    document.getElementById('chicken-risk-level').textContent = chickenRiskLevel;
+                    const chickenIcon = document.querySelector('.alert-summary-icon .fa-feather');
+                    if (chickenIcon) {
+                        chickenIcon.className = chickenIcon.className.replace(/text-\w+/, chickenIconColor);
+                    }
+                }
+                
+                // Call the function to update risk levels
+                updateAnimalHealthRisks(temp);
+            })
+            .catch(error => {
+                console.error('Error fetching weather data:', error);
+                document.getElementById('weather-risk-message').textContent = 
+                    'Unable to fetch weather data. Using default risk assessment.';
+            });
+    }
+    
+    // Function to refresh alert data
+    function refreshAlerts() {
+        // Show loading toast
+        showToast('Refreshing Data', 'Fetching latest disease alert information...', 'info');
+        
+        // Fetch fresh data
+        fetch('/api/disease-alerts/refresh')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to show updated data
+                    window.location.reload();
+                } else {
+                    showToast('Error', data.message || 'Failed to refresh data', 'danger');
+                }
+            })
+            .catch(error => {
+                showToast('Error', 'Failed to connect to server', 'danger');
+                console.error('Error refreshing alerts:', error);
+            });
+    }
+    
+    // Helper function to show toast notifications
+    function showToast(title, message, type = 'primary') {
+        const toastContainer = document.querySelector('.toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-' + type + ' border-0';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = 
+            '<div class="d-flex">' +
+            '    <div class="toast-body">' +
+            '        <strong>' + title + '</strong>: ' + message +
+            '    </div>' +
+            '    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
+            '</div>';
+        
+        toastContainer.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+        bsToast.show();
+        
+        // Remove toast from DOM after it's hidden
+        toast.addEventListener('hidden.bs.toast', function() {
+            toastContainer.removeChild(toast);
+        });
+    }
+</script>
+{% endblock %} 

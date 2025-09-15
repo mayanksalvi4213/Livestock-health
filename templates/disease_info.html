@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ disease.name }} - Livestock Health{% endblock %}
+
+{% block styles %}
+<style>
+  .disease-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .disease-header {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-left: 5px solid #198754;
+  }
+  
+  .disease-title {
+    color: #198754;
+    margin-bottom: 10px;
+  }
+  
+  .disease-description {
+    font-size: 1.1rem;
+    color: #495057;
+  }
+  
+  .severity-badge {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+    margin-left: 10px;
+  }
+  
+  .severity-high {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .severity-moderate {
+    background-color: #fd7e14;
+    color: white;
+  }
+  
+  .severity-low {
+    background-color: #ffc107;
+    color: #212529;
+  }
+  
+  .severity-none {
+    background-color: #198754;
+    color: white;
+  }
+  
+  .severity-unknown {
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  .info-section {
+    margin-bottom: 30px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  
+  .info-section h3 {
+    color: #198754;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+  }
+  
+  .info-list {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .info-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f1f1;
+    position: relative;
+    padding-left: 25px;
+  }
+  
+  .info-list li:before {
+    content: "•";
+    color: #198754;
+    font-size: 1.5rem;
+    position: absolute;
+    left: 5px;
+    top: 2px;
+  }
+  
+  .info-list li:last-child {
+    border-bottom: none;
+  }
+  
+  .zoonotic-info {
+    background-color: #f8d7da;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin-top: 15px;
+    border-left: 4px solid #dc3545;
+  }
+  
+  .zoonotic-info.no {
+    background-color: #d1e7dd;
+    border-left-color: #198754;
+  }
+  
+  .zoonotic-info.unknown {
+    background-color: #e2e3e5;
+    border-left-color: #6c757d;
+  }
+  
+  .back-btn {
+    margin-bottom: 20px;
+  }
+  
+  .transmission-box {
+    background-color: #e2e3e5;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 10px;
+    border-left: 4px solid #6c757d;
+  }
+  
+  .economic-impact {
+    margin-top: 15px;
+    font-style: italic;
+    color: #495057;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container disease-container">
+  <a href="javascript:history.back()" class="btn btn-outline-secondary back-btn">
+    <i class="fas fa-arrow-left"></i> Back
+  </a>
+  
+  <div class="disease-header">
+    <h1 class="disease-title">
+      {{ disease.name }}
+      {% if disease.severity %}
+        <span class="severity-badge severity-{{ disease.severity.lower().split(' ')[0] }}">
+          {{ disease.severity }} Severity
+        </span>
+      {% endif %}
+    </h1>
+    <p class="disease-description">{{ disease.description }}</p>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-6">
+      <div class="info-section">
+        <h3><i class="fas fa-exclamation-circle me-2"></i> Symptoms</h3>
+        <ul class="info-list">
+          {% for symptom in disease.symptoms %}
+            <li>{{ symptom }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      {% if disease.transmission %}
+      <div class="info-section">
+        <h3><i class="fas fa-exchange-alt me-2"></i> Transmission</h3>
+        <div class="transmission-box">
+          {{ disease.transmission }}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="col-md-6">
+      <div class="info-section">
+        <h3><i class="fas fa-shield-alt me-2"></i> Prevention</h3>
+        <ul class="info-list">
+          {% for item in disease.prevention %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      <div class="info-section">
+        <h3>
+          {% if 'maintenance' in disease %}
+            <i class="fas fa-heart me-2"></i> Maintenance
+          {% else %}
+            <i class="fas fa-medkit me-2"></i> Treatment
+          {% endif %}
+        </h3>
+        <p>{{ disease.treatment if 'treatment' in disease else disease.maintenance }}</p>
+        <ul class="info-list">
+          {% if 'treatment_options' in disease %}
+            {% for item in disease.treatment_options %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          {% elif 'maintenance_options' in disease %}
+            {% for item in disease.maintenance_options %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="info-section">
+    <h3><i class="fas fa-info-circle me-2"></i> Additional Information</h3>
+    
+    <div class="zoonotic-info {% if disease.zoonotic == 'Yes (can be transmitted to humans)' %}yes{% elif disease.zoonotic == 'No (does not affect humans)' %}no{% else %}unknown{% endif %}">
+      <strong>Zoonotic Potential:</strong> {{ disease.zoonotic }}
+    </div>
+    
+    <div class="economic-impact">
+      <strong>Economic Impact:</strong> {{ disease.economic_impact }}
+    </div>
+  </div>
+  
+  <div class="text-center mt-4 mb-5">
+    <p class="text-muted">
+      <small>This information is provided for educational purposes only and should not replace professional veterinary advice. 
+      Always consult with a qualified veterinarian for diagnosis and treatment of animal health issues.</small>
+    </p>
+    
+    <a href="{{ url_for('health.index') }}" class="btn btn-primary mt-3">
+      <i class="fas fa-stethoscope me-2"></i> Go to Health Check
+    </a>
+  </div>
+</div>
+{% endblock %} 

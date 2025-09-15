@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Livestock Health{% endblock %}
+
+{% block styles %}
+<style>
+  .profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .profile-header {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .profile-avatar {
+    font-size: 3rem;
+    background-color: #198754;
+    color: white;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+  }
+  
+  .profile-details h2 {
+    margin-bottom: 5px;
+    color: #198754;
+  }
+  
+  .profile-section {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  
+  .profile-section h3 {
+    color: #198754;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+  }
+  
+  .detail-row {
+    margin-bottom: 10px;
+    display: flex;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    width: 150px;
+    color: #495057;
+  }
+  
+  .detail-value {
+    flex-grow: 1;
+  }
+  
+  .animal-card {
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .actions-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container profile-container">
+  <div class="profile-header">
+    <div class="profile-details">
+      <h2>{{ user.full_name }}</h2>
+      <p class="text-muted">{{ user.mobile_number }}</p>
+    </div>
+  </div>
+  
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <div class="profile-section">
+    <h3><i class="fas fa-user-circle me-2"></i> Personal Information</h3>
+    <div class="detail-row">
+      <div class="detail-label">Name</div>
+      <div class="detail-value">{{ user.full_name }}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">Mobile Number</div>
+      <div class="detail-value">{{ user.mobile_number }}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">Language</div>
+      <div class="detail-value">
+        {% if user.preferred_language %}
+          {{ user.preferred_language.name }}
+        {% else %}
+          English (Default)
+        {% endif %}
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">Account Created</div>
+      <div class="detail-value">{{ user.created_at.strftime('%d %b %Y') }}</div>
+    </div>
+  </div>
+  
+  {% if farm %}
+  <div class="profile-section">
+    <h3><i class="fas fa-home me-2"></i> Farm Information</h3>
+    <div class="detail-row">
+      <div class="detail-label">Farm Name</div>
+      <div class="detail-value">{{ farm.name or 'Not set' }}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">Address</div>
+      <div class="detail-value">{{ farm.address }}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">District</div>
+      <div class="detail-value">{{ farm.district }}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">State</div>
+      <div class="detail-value">{{ farm.state }}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">PIN Code</div>
+      <div class="detail-value">{{ farm.pincode or 'Not available' }}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">GPS Coordinates</div>
+      <div class="detail-value">
+        {% if farm.latitude and farm.longitude %}
+          {{ farm.latitude }}, {{ farm.longitude }}
+        {% else %}
+          Not available
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="profile-section">
+    <h3><i class="fas fa-home me-2"></i> Farm Information</h3>
+    <div class="alert alert-warning">
+      <p>You haven't set up your farm information yet.</p>
+      <a href="{{ url_for('profile.edit') }}" class="btn btn-sm btn-primary mt-2">
+        <i class="fas fa-plus-circle me-1"></i> Add Farm Details
+      </a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if animals %}
+  <div class="profile-section">
+    <h3><i class="fas fa-paw me-2"></i> My Animals</h3>
+    {% for animal in animals %}
+      <div class="animal-card">
+        <div class="detail-row">
+          <div class="detail-label">Name</div>
+          <div class="detail-value">{{ animal.name or 'Unnamed' }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Type</div>
+          <div class="detail-value">
+            {% if animal.animal_type %}
+              {{ animal.animal_type.name }}
+            {% else %}
+              Unknown
+            {% endif %}
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Breed</div>
+          <div class="detail-value">{{ animal.breed or 'Unknown' }}</div>
+        </div>
+        {% if animal.age_months %}
+        <div class="detail-row">
+          <div class="detail-label">Age</div>
+          <div class="detail-value">
+            {% if animal.age_months >= 12 %}
+              {{ (animal.age_months / 12)|round(1) }} years
+            {% else %}
+              {{ animal.age_months }} months
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        {% if animal.weight_kg %}
+        <div class="detail-row">
+          <div class="detail-label">Weight</div>
+          <div class="detail-value">{{ animal.weight_kg }} kg</div>
+        </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  
+  <div class="actions-section">
+    <a href="{{ url_for('profile.edit') }}" class="btn btn-primary">
+      <i class="fas fa-edit me-2"></i> Edit Profile
+    </a>
+    <a href="{{ url_for('profile.change_password') }}" class="btn btn-outline-primary">
+      <i class="fas fa-key me-2"></i> Change Password
+    </a>
+  </div>
+</div>
+{% endblock %} 

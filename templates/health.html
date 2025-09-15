@@ -1,0 +1,2190 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.animal_health_analysis }} - Livestock Health{% endblock %}
+
+{% block styles %}
+    <style>
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .alert {
+            margin-top: 15px;
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .image-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 5px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .upload-container {
+        border: 3px dashed var(--primary-color);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            transition: all 0.3s;
+        }
+    .upload-container:hover, .upload-container.dragover {
+        background-color: rgba(21, 115, 71, 0.1);
+        }
+        .feed-card {
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .feed-card:hover {
+            transform: translateY(-5px);
+        }
+        #image-preview {
+            max-height: 300px;
+            object-fit: contain;
+        }
+        .progress {
+            margin-bottom: 10px;
+        }
+    .page-header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 20px 0;
+        margin-bottom: 30px;
+    }
+    .btn-success {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    .btn-success:hover {
+        background-color: #0f5132;
+        border-color: #0f5132;
+    }
+    .btn-outline-success {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    .btn-outline-success:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .bg-success {
+        background-color: var(--primary-color) !important;
+    }
+    .text-success {
+        color: var(--primary-color) !important;
+    }
+    /* Result card styling */
+    .detection-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+    }
+    .confidence-bar {
+        width: 150px;
+        height: 15px;
+        background-color: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .confidence-level {
+        height: 100%;
+        background-color: var(--primary-color);
+        border-radius: 10px;
+    }
+    .analysis-result-card {
+        display: none;
+    }
+    .analysis-result-card.d-none {
+        display: none !important;
+    }
+    .analysis-result-card:not(.d-none) {
+        display: block !important;
+    }
+    .recommendation-list li {
+        background-color: rgba(248, 249, 250, 0.7);
+        border-radius: 5px;
+        transition: background-color 0.2s;
+    }
+    .recommendation-list li:hover {
+        background-color: rgba(233, 236, 239, 0.9);
+    }
+    .recommendation-list i {
+        width: 20px;
+        text-align: center;
+    }
+    /* Vaccine card styling */
+    #vaccineRecommendationCard {
+        border: 2px solid #28a745 !important;
+        border-radius: 8px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    #vaccineRecommendationCard:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+    }
+    #vaccineRecommendationCard .card-header {
+        background: linear-gradient(135deg, #28a745, #1d8348);
+        padding: 15px;
+    }
+    #vaccineRecommendationCard .card-body {
+        padding: 20px;
+    }
+    #vaccineRecommendationCard #vaccineName {
+        color: #28a745;
+        font-weight: 600;
+        border-bottom: 2px solid rgba(40, 167, 69, 0.2);
+        padding-bottom: 10px;
+    }
+    .vaccine-info p strong {
+        color: #495057;
+    }
+    /* Vaccine recommendation in list */
+    .vaccine-recommend-item {
+        background-color: rgba(40, 167, 69, 0.1) !important;
+        border-left: 4px solid #28a745 !important;
+    }
+    /* Vaccination section styling */
+    #vaccinationSection .card {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    #vaccinationSection .card:hover {
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+    }
+    
+    #vaccinationSection .card-header {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        padding: 15px;
+    }
+    
+    #vaccinationSection .bg-light {
+        background-color: rgba(40, 167, 69, 0.1) !important;
+    }
+    
+    #vaccinationSection .rounded-circle {
+        width: 120px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #vaccinationSection #vaccine-name {
+        color: #28a745;
+        font-weight: 600;
+    }
+    
+    #vaccinationSection .badge {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+    
+    #vaccinationSection .row.g-3 {
+        background-color: rgba(248, 249, 250, 0.5);
+        padding: 15px;
+        border-radius: 8px;
+    }
+    
+    #vaccinationSection strong {
+        color: #495057;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    #vaccinationSection {
+        animation: fadeIn 0.5s ease-out;
+    }
+    </style>
+{% endblock %}
+
+{% block head %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        // Ensure jspdf is globally available with correct capitalization
+        document.addEventListener('DOMContentLoaded', function() {
+            window.jsPDF = window.jspdf.jsPDF;
+            console.log("jsPDF initialized:", !!window.jsPDF);
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+        <div class="container">
+        <h1 class="display-4">{{ t.animal_health_analysis }}</h1>
+        <p class="lead">{{ t.upload_image }}</p>
+            </div>
+        </div>
+
+    <!-- Main Content -->
+<div class="container mb-5">
+    <!-- Introduction Card -->
+        <div class="card mb-4">
+            <div class="card-body">
+            <h5 class="card-title">{{ t.ai_powered_assessment }}</h5>
+            <p class="card-text">{{ t.upload_photo }}</p>
+            <p class="card-text text-muted small">{{ t.best_results }}</p>
+        </div>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">{{ t.upload_animal_image }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="health-form" enctype="multipart/form-data">
+                            <!-- Animal Type Selection -->
+                            <div class="mb-3">
+                            <label for="animalType" class="form-label">{{ t.animal_type }}:</label>
+                                <select class="form-select" id="animalType" name="animalType">
+                                    <option value="cow" selected>Cow</option>
+                                    <option value="goat">Goat</option>
+                                    <option value="chicken">Chicken</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Image Upload -->
+                            <div class="mb-3">
+                                <input type="file" id="health-image" name="image" accept="image/*" style="display: none;">
+                                <div id="upload-container" class="upload-container">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-success mb-3"></i>
+                                <h5>{{ t.drop_image }}</h5>
+                                <p>{{ t.or }} click to browse</p>
+                                </div>
+                                
+                                <!-- Image Preview -->
+                                <div id="image-preview-container" class="text-center mt-3" style="display: none;">
+                                    <img id="image-preview" class="img-fluid border rounded mb-3" src="" alt="Image preview">
+                                    <div>
+                                    <button type="button" id="change-image-btn" class="btn btn-outline-secondary">{{ t.change_image }}</button>
+                                    <button type="submit" id="submit-health" class="btn btn-success ms-2">{{ t.analyze_image }}</button>
+                                </div>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <!-- Loading Spinner -->
+                        <div id="loading-spinner" class="text-center mt-4" style="display: none;">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        <p class="mt-2">{{ t.analyzing_image }}</p>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Health analysis result card (appears after analysis) -->
+    <div class="card" id="analysisResultCard" style="display: none;">
+                <div class="card-header bg-success text-white">
+            <h5 class="mb-0">{{ t.health_analysis_result }}</h5>
+                </div>
+                <div class="card-body">
+            <div class="result-section mb-4">
+                <h4 class="mb-3">{{ t.detection_result }}</h4>
+                <div class="d-flex align-items-center">
+                    <div class="detection-icon me-3 bg-danger text-white">
+                        <i class="fas fa-viruses fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1" id="detectedCondition">{{ t.ringworm }}</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="confidence-bar me-2">
+                                <div class="confidence-level" style="width: 85%;"></div>
+                            </div>
+                            <span class="confidence-text">{{ t.confidence }}: 85%</span>
+                        </div>
+                        <!-- Add second prediction display -->
+                        <div class="mt-2" id="secondPrediction" style="display: none;">
+                            <small class="text-muted">Second most likely:</small>
+                            <div class="d-flex align-items-center">
+                                <span id="secondCondition" class="me-2">-</span>
+                                <div class="confidence-bar me-2" style="width: 100px;">
+                                    <div class="confidence-level" id="secondConfidenceBar" style="width: 0%;"></div>
+                                </div>
+                                <span class="confidence-text" id="secondConfidence">{{ t.confidence }}: 0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vaccine Recommendation Card -->
+            <div class="card mt-4 mb-4" id="vaccineRecommendationCard" style="display: none; border: 2px solid #28a745;">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-syringe me-2 fa-lg"></i>
+                        <h5 class="mb-0">{{ t.recommended_vaccine }}</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="vaccine-info">
+                        <div class="alert alert-success mb-3" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Important:</strong> Vaccines are essential for preventing this disease. Consult your veterinarian.
+                        </div>
+                        <h5 id="vaccineName" class="mb-3">Vaccine Name</h5>
+                        <p id="vaccineDescription">Vaccine description will appear here.</p>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <p><strong>{{ t.schedule }}:</strong> <span id="vaccineSchedule">Schedule</span></p>
+                                <p><strong>{{ t.administration }}:</strong> <span id="vaccineAdministration">Administration</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>{{ t.age_for_first_dose }}:</strong> <span id="vaccineFirstDose">Age</span></p>
+                                <p><strong>{{ t.effectiveness }}:</strong> <span id="vaccineEffectiveness">Effectiveness</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="/vaccine" id="vaccineDetailsLink" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-info-circle me-1"></i> {{ t.more_information }}
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- After the vaccine recommendation card and before the recommendations row -->
+            <!-- Nearby Veterinary Services Section -->
+            <div class="card mt-4 mb-4 d-none" id="nearbyVetSection">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-clinic-medical me-2 fa-lg"></i>
+                        <h5 class="mb-0">{{ t.nearby_veterinary_services }}</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3"><i class="fas fa-info-circle me-2"></i> {{ t.nearby_vets_message }}</p>
+                    <div id="vetMap" style="height: 300px; width: 100%; border-radius: 8px;"></div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="result-section">
+                        <h5>{{ t.recommendations }}</h5>
+                        <p class="text-muted"><i class="fas fa-info-circle me-1"></i> Below you'll find medicinal and dietary recommendations for treating this condition in Indian farming conditions.</p>
+                        <ul class="recommendation-list list-unstyled">
+                            <li class="mb-2 p-2 border-bottom"><i class="fas fa-medkit text-danger me-2"></i> {{ t.consult_vet }}</li>
+                            <li class="mb-2 p-2 border-bottom"><i class="fas fa-house-user text-warning me-2"></i> {{ t.isolate_animal }}</li>
+                            <li class="mb-2 p-2 border-bottom"><i class="fas fa-capsules text-primary me-2"></i> {{ t.follow_treatment }}</li>
+                            <li class="mb-2 p-2"><i class="fas fa-eye text-info me-2"></i> {{ t.monitor_symptoms }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vaccination Section -->
+            <div class="row mt-4" id="vaccinationSection" style="display: none;">
+                <div class="col-md-12">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-syringe me-2"></i>
+                                <h5 class="mb-0">Vaccination Information</h5>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center mb-4">
+                                        <div class="bg-light p-3 rounded-circle d-inline-block mb-3">
+                                            <i class="fas fa-shield-virus fa-3x text-success"></i>
+                                        </div>
+                                        <h5 id="vaccine-name" class="mb-2">Vaccine Name</h5>
+                                        <span id="vaccine-effectiveness" class="badge bg-success">Effectiveness: 80-95%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <p id="vaccine-description" class="mb-3">Vaccine description loading...</p>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-calendar-alt text-success me-2"></i>
+                                                <strong>Schedule:</strong>
+                                            </div>
+                                            <p id="vaccine-schedule" class="ms-4">Schedule information</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-syringe text-success me-2"></i>
+                                                <strong>Administration:</strong>
+                                            </div>
+                                            <p id="vaccine-administration" class="ms-4">Administration method</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-baby-carriage text-success me-2"></i>
+                                                <strong>First Dose Age:</strong>
+                                            </div>
+                                            <p id="vaccine-firstdose" class="ms-4">Age information</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                                <strong>Side Effects:</strong>
+                                            </div>
+                                            <p id="vaccine-sideeffects" class="ms-4">Possible side effects</p>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info mt-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <span id="vaccine-notes">Additional notes about the vaccine</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end mt-3">
+                                <a href="#" id="vaccinationDetailsLink" class="btn btn-success">
+                                    <i class="fas fa-info-circle me-2"></i> View All Vaccine Options
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-secondary" id="backToUploadBtn">
+                    <i class="fas fa-arrow-left me-2"></i> {{ t.back }}
+                </button>
+                <div>
+                    <a href="#" id="viewVaccineBtn" class="btn btn-outline-success me-2" style="display: none;">
+                        <i class="fas fa-syringe me-2"></i> {{ t.view_vaccine_details }}
+                    </a>
+
+                    <a href="#" id="getVaccineInfoBtn" class="btn btn-success">
+                        <i class="fas fa-syringe me-2"></i> <span id="vaccineButtonText">{{ t.get_vaccine_info }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+
+<!-- Add the nearby veterinarians map section below the vaccine recommendation -->
+<div id="nearbyVetSection" class="container mt-4 d-none">
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-map-marker-alt me-2"></i> Nearby Veterinary Services
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <p>Based on your farm location, here are the nearest veterinary services that can help with the detected condition.</p>
+            </div>
+            <div id="vetMap" style="height: 300px; width: 100%; border-radius: 8px;"></div>
+        </div>
+    </div>
+        </div>
+{% endblock %}
+
+<!-- Vaccine Reminder Modal -->
+<div class="modal fade" id="vaccineReminderModal" tabindex="-1" aria-labelledby="vaccineReminderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="vaccineReminderModalLabel">Set Vaccination Reminder</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Set a reminder for <span id="reminderVaccineName" class="fw-bold">vaccine</span> administration.</p>
+                
+                <form id="reminderForm">
+                    <div class="mb-3">
+                        <label for="reminderDate" class="form-label">Reminder Date</label>
+                        <input type="date" class="form-control" id="reminderDate" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="animalDetails" class="form-label">Animal Details</label>
+                        <input type="text" class="form-control" id="animalDetails" placeholder="Animal name/ID (optional)">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="additionalNotes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="additionalNotes" rows="3" placeholder="Any additional notes for this vaccination"></textarea>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailReminder" checked>
+                        <label class="form-check-label" for="emailReminder">
+                            Receive email reminder
+                        </label>
+                    </div>
+                </form>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    You'll receive a notification on the specified date with the vaccination details.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveReminderBtn">Save Reminder</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Initialize variables
+        let selectedAnimal = 'cow';
+        let selectedFile = null;
+        
+        // Add constant with disease-specific vaccines
+        const diseaseVaccines = {
+            "Lumpy Skin Disease": {
+                name: "LSD Vaccine",
+                description: "Attenuated virus vaccine that provides protection against Lumpy Skin Disease.",
+                schedule: "Annual vaccination",
+                administration: "Subcutaneous injection",
+                first_dose_age: "6 months",
+                effectiveness: "85-95%",
+                side_effects: "Mild fever, local swelling at injection site",
+                storage: "2-8°C, protect from light",
+                notes: "Essential for cattle in endemic areas"
+            },
+            "Lumpy Cows": {
+                name: "LSD Vaccine (Lumpy Skin Disease)",
+                description: "Live attenuated vaccine specifically developed for the prevention of Lumpy Skin Disease in cattle. Provides strong immunity against the capripoxvirus that causes nodular skin lesions.",
+                schedule: "Annual vaccination, with boosters every 6 months in high-risk areas",
+                administration: "Subcutaneous injection, 2ml dose in the neck region",
+                first_dose_age: "6 months of age, can be administered to pregnant cows",
+                effectiveness: "85-95% protection against clinical disease",
+                side_effects: "Mild transient fever, local swelling at injection site which resolves within 1-2 weeks",
+                storage: "2-8°C, protected from light and heat, maintain cold chain",
+                notes: "Critical for cattle in endemic areas. Multiple commercial formulations available (Lumpyvax, LSDV, Neethling strain vaccines). Vaccination is the most effective control measure."
+            },
+            "Foot And Mouth Disease": {
+                name: "FMD Vaccine",
+                description: "Inactivated vaccine containing multiple serotypes of FMDV.",
+                schedule: "Every 6 months in endemic areas",
+                administration: "Intramuscular injection",
+                first_dose_age: "2-3 months",
+                effectiveness: "80-90%",
+                side_effects: "Local reaction at injection site",
+                storage: "2-8°C",
+                notes: "Different formulations exist for different regions"
+            },
+            "Mastitis": {
+                name: "J-5 Bacterin",
+                description: "Vaccine against common bacterial causes of mastitis in cattle.",
+                schedule: "Initial series of 3 doses, then annual booster",
+                administration: "Intramuscular injection",
+                first_dose_age: "Adult dairy cows",
+                effectiveness: "Reduces severity of clinical cases",
+                side_effects: "Minimal",
+                storage: "2-8°C",
+                notes: "Should be used with comprehensive mastitis prevention program"
+            },
+            "Brucellosis": {
+                name: "RB51 Vaccine",
+                description: "Live attenuated vaccine against Brucella abortus in cattle.",
+                schedule: "Single dose for calves, boosters as per regulations",
+                administration: "Subcutaneous injection",
+                first_dose_age: "4-12 months",
+                effectiveness: "70-90%",
+                side_effects: "Mild local reaction",
+                storage: "2-8°C, protect from light",
+                notes: "Regulatory restrictions may apply"
+            },
+            "Ringworm": {
+                name: "LTF-130",
+                description: "Live vaccine containing Trichophyton verrucosum strain LTF-130.",
+                schedule: "Two doses 10-14 days apart",
+                administration: "Intramuscular injection",
+                first_dose_age: "From 2 months onwards",
+                effectiveness: "80-95%",
+                side_effects: "Local swelling at injection site",
+                storage: "2-8°C",
+                notes: "Used both as prevention and for treatment"
+            },
+            "Blackleg": {
+                name: "7-way Clostridial Vaccine",
+                description: "Provides protection against multiple clostridial diseases including blackleg.",
+                schedule: "Initial vaccination followed by booster after 4-6 weeks, then annual",
+                administration: "Subcutaneous injection",
+                first_dose_age: "2-3 months",
+                effectiveness: "High effectiveness when properly administered",
+                side_effects: "Occasional swelling at injection site",
+                storage: "2-8°C",
+                notes: "Critical for cattle in endemic areas"
+            }
+        };
+        
+        // Update animal type when selection changes
+        $('#animalType').change(function() {
+            selectedAnimal = $(this).val();
+            console.log('Animal type changed to:', selectedAnimal);
+            
+            // Update recommendations based on animal type
+            updateRecommendations();
+        });
+        
+        // Update recommendations based on animal type
+        function updateRecommendations() {
+            const recommendationsContainer = $('#food-recommendations');
+            const breedContainer = $('#breed-prediction-container');
+            
+            // Show/hide breed prediction based on animal
+            if(selectedAnimal === 'fish') {
+                breedContainer.hide();
+            } else {
+                breedContainer.show();
+            }
+            
+            // Fetch and display appropriate recommendations
+            $.ajax({
+                url: `/health/recommendations/${selectedAnimal}`,
+                type: 'GET',
+                success: function(response) {
+                    recommendationsContainer.html(response.recommendations);
+                },
+                error: function(error) {
+                    console.error('Error fetching recommendations:', error);
+                    recommendationsContainer.html('<p>Error loading recommendations.</p>');
+                }
+            });
+        }
+        
+        // Set up file upload handling for health analysis
+        $('#health-image').change(function() {
+            const file = this.files[0];
+            selectedFile = file;
+            
+            if (file) {
+                // Enable submit button
+                $('#submit-health').prop('disabled', false);
+                
+                // Show image preview
+                const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#image-preview').attr('src', e.target.result);
+                        $('#image-preview-container').show();
+                        $('#upload-container').hide();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Make the upload container clickable to trigger file input
+        $('#upload-container').css('cursor', 'pointer').click(function() {
+            $('#health-image').click();
+        });
+        
+        // Handle change image button
+        $('#change-image-btn').click(function() {
+            $('#health-image').val('');
+            $('#image-preview-container').hide();
+            $('#upload-container').show();
+            selectedFile = null;
+        });
+        
+        // Set up drag and drop for the upload container
+        const uploadContainer = document.getElementById('upload-container');
+        
+        uploadContainer.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('dragover');
+        });
+        
+        uploadContainer.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('dragover');
+        });
+        
+        uploadContainer.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('dragover');
+            
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            
+            if (file && file.type.match('image.*')) {
+                $('#health-image')[0].files = dt.files;
+                $('#health-image').trigger('change');
+            }
+        });
+        
+        // Handle form submission for health analysis
+        $('#health-form').submit(function(e) {
+            e.preventDefault();
+
+            // Validate if an image is selected
+            if (!selectedFile) {
+                alert('Please upload an image first.');
+                return;
+            }
+            
+            // Show loading indicator
+            $('#loading-spinner').show();
+                
+            // Create form data with correct parameter names
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            formData.append('animalType', $('#animalType').val());
+            
+            console.log("Animal type:", $('#animalType').val());
+            console.log("Sending request to /analyze-health");
+            
+            // Perform health analysis with the correct endpoint
+            $.ajax({
+                url: '/analyze-health',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    console.log("Response received:", response);
+                    
+                    // Hide loading spinner
+                    $('#loading-spinner').hide();
+                    
+                    if (!response.success) {
+                        console.log("Response indicates failure:", response.error);
+                        alert('Error: ' + (response.error || 'Unknown error'));
+                        return;
+                    }
+                    
+                    // Define a fallback translation object in case t is undefined
+                    const translation = (typeof t !== 'undefined') ? t : {
+                        confidence: 'Confidence'
+                    };
+                    
+                    // Update each part individually with separate try/catch blocks
+                    try {
+                        // Step 1: Update the disease name
+                        const diseaseElement = document.getElementById('detectedCondition');
+                        if (diseaseElement) {
+                            diseaseElement.textContent = response.disease || 'Unknown';
+                            console.log("✓ Updated disease text");
+                        } else {
+                            console.error("× Could not find detectedCondition element");
+                        }
+                    } catch (err) {
+                        console.error("Error updating disease:", err.message);
+                    }
+                    
+                    try {
+                        // Step 2: Update confidence
+                        const confidenceElement = document.querySelector('.confidence-text');
+                        if (confidenceElement) {
+                            let confidenceText = response.confidence || '0%';
+                            confidenceElement.textContent = translation.confidence + ': ' + confidenceText;
+                            
+                            // Also update the confidence bar if it exists
+                            const confidenceBar = document.querySelector('.confidence-level');
+                            if (confidenceBar) {
+                                let confidenceValue = parseFloat(confidenceText.replace('%', ''));
+                                confidenceBar.style.width = confidenceValue + '%';
+                            }
+                            
+                            console.log("✓ Updated confidence text and bar");
+                        } else {
+                            console.error("× Could not find confidence-text element");
+                        }
+                    } catch (err) {
+                        console.error("Error updating confidence:", err.message);
+                    }
+                    
+                    try {
+                        // Step 3: Update second prediction if available
+                        const secondPredictionDiv = document.getElementById('secondPrediction');
+                        if (secondPredictionDiv && response.predictions && response.predictions.length > 1) {
+                            // Get second prediction
+                            const secondPred = response.predictions[1];
+                            
+                            // Update second condition text
+                            const secondCondition = document.getElementById('secondCondition');
+                            if (secondCondition) {
+                                secondCondition.textContent = secondPred.disease;
+                            }
+                            
+                            // Update second confidence
+                            const secondConfidence = document.getElementById('secondConfidence');
+                            if (secondConfidence) {
+                                secondConfidence.textContent = translation.confidence + ': ' + secondPred.confidence;
+                            }
+                            
+                            // Update second confidence bar
+                            const secondConfidenceBar = document.getElementById('secondConfidenceBar');
+                            if (secondConfidenceBar) {
+                                let confidenceValue = parseFloat(secondPred.confidence.replace('%', ''));
+                                secondConfidenceBar.style.width = confidenceValue + '%';
+                            }
+                            
+                            // Show the second prediction div
+                            secondPredictionDiv.style.display = 'block';
+                            console.log("✓ Updated second prediction");
+                        } else {
+                            console.log("No second prediction available");
+                        }
+                    } catch (err) {
+                        console.error("Error updating second prediction:", err.message);
+                    }
+                    
+                    try {
+                        // Step 4: Update recommendations
+                        const recommendationList = document.querySelector('.recommendation-list');
+                        if (recommendationList) {
+                            recommendationList.innerHTML = '';
+                            
+                            if (response.recommendations && response.recommendations.length > 0) {
+                                response.recommendations.forEach(function(recommendation) {
+                                    let iconClass = 'fas fa-check-circle text-success';
+                                    
+                                    // Determine icon based on content
+                                    if (recommendation.startsWith('MEDICINE:')) {
+                                        iconClass = 'fas fa-capsules text-primary';
+                                        recommendation = recommendation.replace('MEDICINE:', '<strong>Medicine:</strong>');
+                                    } else if (recommendation.startsWith('DIET:')) {
+                                        iconClass = 'fas fa-utensils text-warning';
+                                        recommendation = recommendation.replace('DIET:', '<strong>Diet:</strong>');
+                                    } else if (recommendation.includes('isolate') || recommendation.includes('Isolate')) {
+                                        iconClass = 'fas fa-house-user text-danger';
+                                    } else if (recommendation.includes('consult') || recommendation.includes('Consult') || recommendation.includes('veterinarian')) {
+                                        iconClass = 'fas fa-user-md text-info';
+                                    } else if (recommendation.includes('monitor') || recommendation.includes('Monitor')) {
+                                        iconClass = 'fas fa-eye text-secondary';
+                                    } else if (recommendation.includes('clean') || recommendation.includes('disinfect') || recommendation.includes('Clean') || recommendation.includes('Disinfect')) {
+                                        iconClass = 'fas fa-spray-can text-dark';
+                                    }
+                                    
+                                    recommendationList.innerHTML += `<li class="mb-2 p-2 border-bottom"><i class="${iconClass} me-2"></i> ${recommendation}</li>`;
+                                });
+                                
+                                // Remove border-bottom from last item
+                                const items = recommendationList.querySelectorAll('li');
+                                if (items.length > 0) {
+                                    items[items.length - 1].classList.remove('border-bottom');
+                                }
+                            } else {
+                                recommendationList.innerHTML = `<li class="mb-2 p-2"><i class="fas fa-info-circle text-info me-2"></i> No specific recommendations available</li>`;
+                            }
+                            console.log("✓ Updated recommendations");
+                        } else {
+                            console.error("× Could not find recommendation-list element");
+                        }
+                    } catch (err) {
+                        console.error("Error updating recommendations:", err.message);
+                    }
+                    
+                    try {
+                        // Step 5: Update icon
+                        updateDetectionIcon(response.disease, $('#animalType').val());
+                        console.log("✓ Updated detection icon");
+                    } catch (err) {
+                        console.error("Error updating icon:", err.message);
+                    }
+                    
+                    try {
+                        // Step 6: Display the results card
+                        const resultCard = document.getElementById('analysisResultCard');
+                        if (resultCard) {
+                            resultCard.style.display = 'block';
+                            console.log("✓ Displayed result card");
+                            
+                            // Scroll to results
+                            $('html, body').animate({
+                                scrollTop: $('#analysisResultCard').offset().top - 50
+                            }, 500);
+                        } else {
+                            console.error("× Could not find analysisResultCard element");
+                        }
+                    } catch (err) {
+                        console.error("Error displaying result card:", err.message);
+                    }
+
+                    // After successful analysis
+                    handleAnalysisSuccess(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX error:", status, error);
+                    console.log("Response text:", xhr.responseText);
+                    
+                    // Hide loading spinner
+                    $('#loading-spinner').hide();
+                    
+                    // Try to parse error message
+                    try {
+                        const errorResponse = JSON.parse(xhr.responseText);
+                        if (errorResponse && errorResponse.error) {
+                            alert('Error: ' + errorResponse.error);
+                        } else {
+                            alert('Error analyzing image. Please try again.');
+                        }
+                    } catch (e) {
+                        alert('Error analyzing image. Please try again.');
+                    }
+                }
+            });
+        });
+        
+        // Function to update the detection icon based on disease and animal type
+        function updateDetectionIcon(disease, animalType) {
+            const iconElement = $('.detection-icon i');
+            
+            // Reset classes
+            iconElement.removeClass('fa-viruses fa-eye fa-lungs fa-feather fa-head-side-cough fa-check-circle fa-plus-square fa-virus');
+            
+            // Set icon based on disease and animal type
+            if (animalType.toLowerCase() === 'chicken') {
+                // Chicken disease icons
+                if (disease === 'Healthy') {
+                    iconElement.addClass('fa-feather');
+                    $('.detection-icon').removeClass('bg-danger').addClass('bg-success');
+                } else if (disease === 'Avian Influenza' || disease === 'Newcastle Disease') {
+                    iconElement.addClass('fa-viruses');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else if (disease === 'Infectious Coryza') {
+                    iconElement.addClass('fa-head-side-cough');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else if (disease === 'Fowl Pox') {
+                    iconElement.addClass('fa-virus');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else {
+                    iconElement.addClass('fa-viruses');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                }
+            } else if (animalType.toLowerCase() === 'goat') {
+                // Goat disease icons
+                if (disease === 'Healthy') {
+                    iconElement.addClass('fa-check-circle');
+                    $('.detection-icon').removeClass('bg-danger').addClass('bg-success');
+                } else if (disease === 'Mastitis') {
+                    iconElement.addClass('fa-plus-square');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else if (disease === 'Bloat') {
+                    iconElement.addClass('fa-stomach');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else if (disease === 'Foot Rot') {
+                    iconElement.addClass('fa-shoe-prints');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else if (disease === 'Contagious Ecthyma') {
+                    iconElement.addClass('fa-virus');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else {
+                    iconElement.addClass('fa-viruses');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                }
+            } else {
+                // Cow disease icons (default)
+                if (disease === 'Healthy') {
+                    iconElement.addClass('fa-check-circle');
+                    $('.detection-icon').removeClass('bg-danger').addClass('bg-success');
+                } else if (disease === 'Pinkeye') {
+                    iconElement.addClass('fa-eye');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else if (disease === 'Lumpy Skin Disease' || disease === 'Ringworm') {
+                    iconElement.addClass('fa-viruses');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else if (disease === 'Mastitis') {
+                    iconElement.addClass('fa-plus-square');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                } else {
+                    iconElement.addClass('fa-viruses');
+                    $('.detection-icon').removeClass('bg-success').addClass('bg-danger');
+                }
+            }
+        }
+        
+        // Function to update detected features list
+        function updateDetectedFeatures(features) {
+            const featureList = $('.feature-list');
+            featureList.empty();
+            
+            if (features && features.length > 0) {
+                features.forEach(function(feature) {
+                    featureList.append(`<li><i class="fas fa-check-circle text-success me-2"></i> ${feature}</li>`);
+                });
+            } else {
+                featureList.append(`<li><i class="fas fa-info-circle text-info me-2"></i> No specific features detected</li>`);
+            }
+        }
+        
+        // Function to update recommendations list
+        function updateRecommendations(recommendations) {
+            const recommendationList = $('.recommendation-list');
+            recommendationList.empty();
+            
+            // Add vaccine recommendation at the top if available
+            if (window.vaccineData) {
+                const vaccineIcon = 'fas fa-syringe text-success';
+                const vaccineName = window.vaccineData.name || '';
+                const vaccineSchedule = window.vaccineData.schedule || '';
+                const vaccineAdmin = window.vaccineData.administration || '';
+                
+                let vaccineText = `<strong>Vaccine:</strong> ${vaccineName} - Schedule: ${vaccineSchedule}, ${vaccineAdmin}`;
+                recommendationList.append(`<li class="mb-2 p-2 border-bottom vaccine-recommend-item bg-light"><i class="${vaccineIcon} me-2"></i> ${vaccineText}</li>`);
+            }
+            
+            if (recommendations && recommendations.length > 0) {
+                recommendations.forEach(function(recommendation) {
+                    let iconClass = 'fas fa-check-circle text-success';
+                    
+                    // Determine icon based on content
+                    if (recommendation.startsWith('MEDICINE:')) {
+                        iconClass = 'fas fa-capsules text-primary';
+                        recommendation = recommendation.replace('MEDICINE:', '<strong>Medicine:</strong>');
+                    } else if (recommendation.startsWith('DIET:')) {
+                        iconClass = 'fas fa-utensils text-warning';
+                        recommendation = recommendation.replace('DIET:', '<strong>Diet:</strong>');
+                    } else if (recommendation.includes('isolate') || recommendation.includes('Isolate')) {
+                        iconClass = 'fas fa-house-user text-danger';
+                    } else if (recommendation.includes('consult') || recommendation.includes('Consult') || recommendation.includes('veterinarian')) {
+                        iconClass = 'fas fa-user-md text-info';
+                    } else if (recommendation.includes('monitor') || recommendation.includes('Monitor')) {
+                        iconClass = 'fas fa-eye text-secondary';
+                    } else if (recommendation.includes('clean') || recommendation.includes('disinfect') || recommendation.includes('Clean') || recommendation.includes('Disinfect')) {
+                        iconClass = 'fas fa-spray-can text-dark';
+                    }
+                    
+                    recommendationList.append(`<li class="mb-2 p-2 border-bottom"><i class="${iconClass} me-2"></i> ${recommendation}</li>`);
+                });
+                
+                // Remove border-bottom from last item
+                const items = recommendationList.querySelectorAll('li');
+                if (items.length > 0) {
+                    items[items.length - 1].classList.remove('border-bottom');
+                }
+            } else {
+                recommendationList.append(`<li class="mb-2 p-2"><i class="fas fa-info-circle text-info me-2"></i> No specific recommendations available</li>`);
+            }
+        }
+
+        // Handle back to upload button
+        $('#backToUploadBtn').click(function() {
+            console.log("Back button clicked");
+            
+            try {
+                // Simply hide the results card
+                document.getElementById('analysisResultCard').style.display = 'none';
+                
+                // Scroll back to upload form
+                $('html, body').animate({
+                    scrollTop: $('.row.justify-content-center').offset().top - 50
+                }, 500);
+                
+                console.log("Results hidden");
+            } catch (err) {
+                console.error("EXACT ERROR in back button:", err.message);
+                console.error("Error stack:", err.stack);
+                alert("Error hiding results: " + err.message);
+            }
+        });
+        
+        // Handle save results button
+        $('#saveResultBtn').click(function() {
+            // Show loading indicator
+            const originalButtonHtml = $(this).html();
+            $(this).html('<i class="fas fa-spinner fa-spin me-2"></i> Generating PDF...');
+            $(this).prop('disabled', true);
+            
+            // Create an object to store analysis data
+            const analysisData = {
+                date: new Date().toISOString(),
+                disease: document.getElementById("detectedCondition").textContent,
+                confidence: document.querySelector(".confidence-text").textContent,
+                recommendations: window.currentRecommendations || [],
+                animalType: $('#animalType').val()
+            };
+            
+            // Add vaccine data if available
+            if (window.vaccineData) {
+                analysisData.vaccine = window.vaccineData;
+            }
+            
+            // Get existing saved analyses or initialize empty array
+            let savedAnalyses = JSON.parse(localStorage.getItem('savedHealthAnalyses') || '[]');
+            
+            // Add new analysis to the beginning of the array
+            savedAnalyses.unshift(analysisData);
+            
+            // Limit to 10 saved analyses
+            if (savedAnalyses.length > 10) {
+                savedAnalyses = savedAnalyses.slice(0, 10);
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('savedHealthAnalyses', JSON.stringify(savedAnalyses));
+            
+            // Generate PDF
+            generatePDF().then(() => {
+                // Restore button state
+                $(this).html(originalButtonHtml);
+                $(this).prop('disabled', false);
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+                $(this).html(originalButtonHtml);
+                $(this).prop('disabled', false);
+                alert('Error generating PDF. Please try again.');
+            });
+        });
+        
+        // Function to generate PDF
+        function generatePDF() {
+            return new Promise((resolve, reject) => {
+                try {
+                    console.log("Starting PDF generation process");
+                    
+                    // Ensure jsPDF is available
+                    if (!window.jsPDF) {
+                        console.error("jsPDF not available, attempting to use jspdf directly");
+                        if (!window.jspdf || !window.jspdf.jsPDF) {
+                            const errorMsg = "PDF library not loaded properly. Please refresh the page.";
+                            alert(errorMsg);
+                            reject(new Error(errorMsg));
+                            return;
+                        }
+                        window.jsPDF = window.jspdf.jsPDF;
+                    }
+                    
+                    // Create a new document with explicit settings
+                    const doc = new window.jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    
+                    console.log("PDF document created");
+                    
+                    // Get the data we need
+                    const disease = document.getElementById("detectedCondition").textContent || "Unknown";
+                    const animalType = document.getElementById("animalType").value || "Unknown";
+                    const confidence = document.querySelector(".confidence-text").textContent || "Unknown";
+                    const date = new Date().toLocaleString();
+                    
+                    // Create the PDF content
+                    // Title
+                    doc.setFontSize(22);
+                    doc.setTextColor(32, 115, 71);
+                    doc.text("Health Analysis Report", 105, 20, { align: 'center' });
+                    
+                    // Animal Image (placeholder)
+                    doc.setDrawColor(200, 200, 200);
+                    doc.setFillColor(240, 240, 240);
+                    doc.roundedRect(65, 30, 80, 60, 3, 3, 'FD');
+                    doc.setFontSize(12);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text("Animal Image", 105, 60, { align: 'center' });
+                    
+                    // Basic Information
+                    doc.setFontSize(14);
+                    doc.setTextColor(32, 115, 71);
+                    doc.text("Animal Information", 20, 105);
+                    
+                    doc.setFontSize(12);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(`Date: ${date}`, 20, 115);
+                    doc.text(`Animal Type: ${animalType}`, 20, 123);
+                    doc.text(`Detected Condition: ${disease}`, 20, 131);
+                    doc.text(`${confidence}`, 20, 139);
+                    
+                    // Recommendations Section
+                    doc.setFontSize(14);
+                    doc.setTextColor(32, 115, 71);
+                    doc.text("Treatment Recommendations", 20, 155);
+                    
+                    // Add recommendations
+                    doc.setFontSize(11);
+                    doc.setTextColor(0, 0, 0);
+                    let yPos = 165;
+                    const recommendations = window.currentRecommendations || [];
+                    recommendations.forEach(recommendation => {
+                        // Format with bullet points
+                        const bullets = recommendation.split(':');
+                        if (bullets.length > 1) {
+                            const prefix = bullets[0] + ":";
+                            const content = bullets.slice(1).join(':');
+                            
+                            doc.setFontStyle('bold');
+                            doc.text(`• ${prefix}`, 20, yPos);
+                            doc.setFontStyle('normal');
+                            
+                            // Handle text wrapping for longer content
+                            const maxWidth = 170;
+                            const contentLines = doc.splitTextToSize(content, maxWidth);
+                            doc.text(contentLines, 30, yPos + 8);
+                            
+                            yPos += 8 + (contentLines.length * 6);
+                        } else {
+                            const lines = doc.splitTextToSize(`• ${recommendation}`, 170);
+                            doc.text(lines, 20, yPos);
+                            yPos += lines.length * 6;
+                        }
+                        
+                        // Add spacing between items
+                        yPos += 2;
+                    });
+                    
+                    // Add vaccine info if available
+                    if (window.vaccineData) {
+                        doc.addPage();
+                        
+                        // Vaccine information header
+                        doc.setFontSize(18);
+                        doc.setTextColor(32, 115, 71);
+                        doc.text("Vaccination Information", 105, 20, { align: 'center' });
+                        
+                        // Vaccine details
+                        doc.setFontSize(14);
+                        doc.setTextColor(32, 115, 71);
+                        doc.text("Recommended Vaccine", 20, 35);
+                        
+                        doc.setFontSize(12);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(`Name: ${window.vaccineData.name}`, 20, 45);
+                        
+                        // Description with text wrapping
+                        const descLines = doc.splitTextToSize(`Description: ${window.vaccineData.description || 'Not available'}`, 170);
+                        doc.text(descLines, 20, 55);
+                        let vaccineYPos = 55 + (descLines.length * 7);
+                        
+                        // Additional vaccine details
+                        doc.text(`Schedule: ${window.vaccineData.schedule || 'Not specified'}`, 20, vaccineYPos);
+                        vaccineYPos += 8;
+                        doc.text(`Administration: ${window.vaccineData.administration || 'Not specified'}`, 20, vaccineYPos);
+                        vaccineYPos += 8;
+                        doc.text(`First Dose Age: ${window.vaccineData.first_dose_age || 'Not specified'}`, 20, vaccineYPos);
+                        vaccineYPos += 8;
+                        doc.text(`Effectiveness: ${window.vaccineData.effectiveness || 'Varies'}`, 20, vaccineYPos);
+                        vaccineYPos += 8;
+                        
+                        // Side effects section
+                        doc.setFontSize(14);
+                        doc.setTextColor(32, 115, 71);
+                        doc.text("Additional Information", 20, vaccineYPos + 10);
+                        
+                        doc.setFontSize(12);
+                        doc.setTextColor(0, 0, 0);
+                        const sideEffectsLines = doc.splitTextToSize(`Side Effects: ${window.vaccineData.side_effects || 'Minimal'}`, 170);
+                        doc.text(sideEffectsLines, 20, vaccineYPos + 20);
+                        let sideEffectsYPos = vaccineYPos + 20 + (sideEffectsLines.length * 7);
+                        
+                        const storageLines = doc.splitTextToSize(`Storage: ${window.vaccineData.storage || 'As per manufacturer guidelines'}`, 170);
+                        doc.text(storageLines, 20, sideEffectsYPos);
+                        sideEffectsYPos += storageLines.length * 7;
+                        
+                        const notesLines = doc.splitTextToSize(`Notes: ${window.vaccineData.notes || 'Consult your veterinarian for specific guidance'}`, 170);
+                        doc.text(notesLines, 20, sideEffectsYPos + 8);
+                    }
+                    
+                    // Add footer to all pages
+                    const pageCount = doc.internal.getNumberOfPages();
+                    for (let i = 1; i <= pageCount; i++) {
+                        doc.setPage(i);
+                        doc.setFontSize(10);
+                        doc.setTextColor(128, 128, 128);
+                        doc.text(`Livestock Health - ${date} - Page ${i} of ${pageCount}`, 105, 285, { align: 'center' });
+                    }
+                    
+                    // Create a safe filename
+                    const safeName = disease.replace(/[^a-z0-9]/gi, '_');
+                    const safeDate = new Date().toISOString().split('T')[0];
+                    const fileName = `Health_Analysis_${safeName}_${safeDate}.pdf`;
+                    
+                    console.log(`Saving PDF as ${fileName}`);
+                    
+                    // Save the PDF with try/catch for better error handling
+                    try {
+                        doc.save(fileName);
+                        console.log("PDF saved successfully");
+                        
+                        // Show success message
+                        const successAlert = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Success!</strong> Health analysis report has been saved as ${fileName}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        $('#analysisResultCard .card-body').prepend(successAlert);
+                        
+                        // Resolve the promise
+                        resolve();
+                    } catch (saveError) {
+                        console.error("Error saving PDF:", saveError);
+                        alert(`Error saving PDF: ${saveError.message}`);
+                        reject(saveError);
+                    }
+                } catch (error) {
+                    console.error("Critical error in PDF generation:", error);
+                    alert(`Error generating PDF: ${error.message}. Please try again.`);
+                    reject(error);
+                }
+            });
+        }
+        
+        // Handle vaccination reminder form
+        $('#saveReminderBtn').click(function() {
+            // Validate form
+            if (!$('#reminderDate').val()) {
+                alert('Please select a reminder date.');
+                return;
+            }
+            
+            // Get vaccine name from global data
+            const vaccineName = window.vaccineData ? window.vaccineData.name : 'Vaccine';
+            
+            // Show success message
+            alert(`Reminder set for ${vaccineName} on ${$('#reminderDate').val()}`);
+            
+            // Close modal
+            $('#vaccineReminderModal').modal('hide');
+        });
+        
+        // Set vaccine name in reminder modal when opened
+        $('#vaccineReminderModal').on('show.bs.modal', function() {
+            const vaccineName = window.vaccineData ? window.vaccineData.name : 'Vaccine';
+            $('#reminderVaccineName').text(vaccineName);
+            
+            // Set default date to 2 weeks from now
+            const twoWeeksLater = new Date();
+            twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
+            $('#reminderDate').val(twoWeeksLater.toISOString().split('T')[0]);
+        });
+
+        // Handle Get Vaccine Info button (replacing Share with Vet)
+        $('#getVaccineInfoBtn').click(function() {
+            const disease = document.getElementById("detectedCondition").textContent;
+            
+            // Show loading indicator
+            $(this).html('<i class="fas fa-spinner fa-spin me-2"></i> Loading...');
+            $(this).prop('disabled', true);
+            
+            // Clean up disease name - replace underscores with spaces and capitalize
+            let formattedDiseaseName = disease;
+            if (disease.includes('_')) {
+                formattedDiseaseName = disease.replace(/_/g, ' ');
+            }
+            
+            // Capitalize first letter of each word for better matching
+            formattedDiseaseName = formattedDiseaseName.split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            
+            // Instead of redirecting, fetch vaccine data for this disease and show it on this page
+            fetch(`/api/vaccine-info/${encodeURIComponent(formattedDiseaseName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Restore button state
+                    $(this).html('<i class="fas fa-syringe me-2"></i> <span id="vaccineButtonText">{{ t.get_vaccine_info }}</span>');
+                    $(this).prop('disabled', false);
+                    
+                    // Create vaccine modal
+                    const vaccineModalHTML = `
+                        <div class="modal fade" id="vaccineInfoModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-syringe me-2"></i> Vaccine Information: ${formattedDiseaseName}
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-4">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    <strong>Disease:</strong> ${formattedDiseaseName}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="vaccinesList" class="row g-4">
+                                            <!-- Vaccines will be shown here -->
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <a href="/vaccine?highlight=${encodeURIComponent(formattedDiseaseName)}" class="btn btn-success">
+                                            <i class="fas fa-external-link-alt me-2"></i> View All Vaccines
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add modal to body if it doesn't exist
+                    if (!document.getElementById('vaccineInfoModal')) {
+                        $('body').append(vaccineModalHTML);
+                    }
+                    
+                    // Fill in vaccines list
+                    const vaccinesList = $('#vaccinesList');
+                    vaccinesList.empty();
+                    
+                    if (data && data.name) {
+                        // Single vaccine information
+                        vaccinesList.append(`
+                            <div class="col-md-12">
+                                <div class="card border-success h-100">
+                                    <div class="card-header bg-success text-white d-flex align-items-center">
+                                        <i class="fas fa-syringe me-2"></i>
+                                        <h5 class="mb-0">${data.name}</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-3">${data.description || 'No description available.'}</p>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item bg-light">
+                                                        <i class="fas fa-calendar-alt text-success me-2"></i>
+                                                        <strong>Schedule:</strong> ${data.schedule || 'Not specified'}
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <i class="fas fa-syringe text-success me-2"></i>
+                                                        <strong>Administration:</strong> ${data.administration || 'Not specified'}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item bg-light">
+                                                        <i class="fas fa-baby text-success me-2"></i>
+                                                        <strong>First Dose Age:</strong> ${data.first_dose_age || 'Not specified'}
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <i class="fas fa-shield-alt text-success me-2"></i>
+                                                        <strong>Effectiveness:</strong> ${data.effectiveness || 'Variable'}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <p><strong>Side Effects:</strong> ${data.side_effects || 'Minimal side effects reported.'}</p>
+                                            <p><strong>Storage:</strong> ${data.storage || 'Follow manufacturer guidelines.'}</p>
+                                            <p class="text-muted mt-2">${data.notes || 'Consult your veterinarian for specific guidance.'}</p>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#vaccineReminderModal">
+                                            <i class="fas fa-calendar-alt me-1"></i> Set Reminder
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    } else if (data && Array.isArray(data)) {
+                        // Multiple vaccines
+                        if (data.length === 0) {
+                            vaccinesList.append(`
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        No specific vaccines found for ${formattedDiseaseName}.
+                                    </div>
+                                </div>
+                            `);
+                        } else {
+                            data.forEach(vaccine => {
+                                vaccinesList.append(`
+                                    <div class="col-md-6">
+                                        <div class="card border-success h-100">
+                                            <div class="card-header bg-success text-white">
+                                                <h5 class="mb-0">${vaccine.name}</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <p>${vaccine.description || 'No description available.'}</p>
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item bg-light">
+                                                        <strong>Schedule:</strong> ${vaccine.schedule || 'Not specified'}
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <strong>Administration:</strong> ${vaccine.administration || 'Not specified'}
+                                                    </li>
+                                                    <li class="list-group-item bg-light">
+                                                        <strong>First Dose:</strong> ${vaccine.first_dose_age || 'Not specified'}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `);
+                            });
+                        }
+                    } else {
+                        // No data or error
+                        vaccinesList.append(`
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No specific vaccines found for ${formattedDiseaseName}.
+                                </div>
+                                <p>General recommendation: Consult with a veterinarian for appropriate vaccination for this condition.</p>
+                            </div>
+                        `);
+                    }
+                    
+                    // Show the modal
+                    const vaccineModal = new bootstrap.Modal(document.getElementById('vaccineInfoModal'));
+                    vaccineModal.show();
+                    
+                })
+                .catch(error => {
+                    console.error('Error fetching vaccine data:', error);
+                    
+                    // Restore button state
+                    $(this).html('<i class="fas fa-syringe me-2"></i> <span id="vaccineButtonText">{{ t.get_vaccine_info }}</span>');
+                    $(this).prop('disabled', false);
+                    
+                    // Show error alert
+                    alert('Error loading vaccine information. Please try again.');
+                });
+        });
+
+        // Function that handles successful analysis response
+        function handleAnalysisSuccess(data) {
+            console.log("Handling analysis success:", data);
+            
+            // Update vaccine information if available
+            if (data.vaccine && data.disease !== 'Healthy') {
+                // Store vaccine data globally
+                window.vaccineData = data.vaccine;
+                
+                // Update vaccine card fields
+                $('#vaccineName').text(data.vaccine.name || 'Unknown');
+                $('#vaccineDescription').text(data.vaccine.description || 'No description available');
+                $('#vaccineSchedule').text(data.vaccine.schedule || 'Not specified');
+                $('#vaccineAdministration').text(data.vaccine.administration || 'Not specified');
+                $('#vaccineFirstDose').text(data.vaccine.first_dose_age || 'Not specified');
+                $('#vaccineEffectiveness').text(data.vaccine.effectiveness || 'Unknown');
+                $('#vaccineSideEffects').text(data.vaccine.side_effects || 'Not specified');
+                
+                // Update vaccine link to highlight this disease
+                $('#vaccineDetailsLink').attr('href', '/vaccine?highlight=' + encodeURIComponent(data.disease));
+                
+                // Show vaccine card
+                $('#vaccineRecommendationCard').show();
+            } else {
+                // Hide vaccine card
+                $('#vaccineRecommendationCard').hide();
+            }
+            
+            // Show the nearby veterinary services if disease is not Healthy
+            if (data.disease !== 'Healthy') {
+                $('#nearbyVetSection').removeClass('d-none');
+                // Initialize the map after the section is visible
+                setTimeout(function() {
+                    console.log("Initializing map after disease analysis");
+                    initVetMap();
+                }, 300);
+            } else {
+                $('#nearbyVetSection').addClass('d-none');
+            }
+            
+            // Store current recommendations for PDF generation
+            window.currentRecommendations = data.recommendations || [];
+            
+            // Enable the action buttons now that analysis is complete
+            $('#saveResultBtn, #shareResultBtn').prop('disabled', false);
+        }
+
+        // Fetch vaccine information
+        function fetchVaccineInfo(diseaseName) {
+            console.log("Fetching vaccine info for:", diseaseName);
+            
+            // Clean up disease name - replace underscores with spaces and capitalize
+            let formattedDiseaseName = diseaseName;
+            if (diseaseName.includes('_')) {
+                formattedDiseaseName = diseaseName.replace(/_/g, ' ');
+            }
+            
+            // Capitalize first letter of each word for better matching
+            formattedDiseaseName = formattedDiseaseName.split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        
+            console.log("Formatted disease name:", formattedDiseaseName);
+            
+            // Show loading indicator on the button
+            $('#vaccineButtonText').text("Loading vaccine info...");
+            
+            // First check our local database which is more reliable
+            if (diseaseVaccines[formattedDiseaseName]) {
+                console.log(`Found vaccine data for ${formattedDiseaseName} in local database`);
+                
+                // Update global vaccine data
+                window.vaccineData = diseaseVaccines[formattedDiseaseName];
+                window.detectedDisease = formattedDiseaseName;
+                
+                // Update the vaccine view button
+                const viewVaccineBtn = document.getElementById("viewVaccineBtn");
+                viewVaccineBtn.style.display = "inline-block";
+                viewVaccineBtn.href = `/vaccine?highlight=${encodeURIComponent(formattedDiseaseName)}`;
+                
+                // Update the Get Vaccine Info button text
+                $('#vaccineButtonText').html(`Vaccine: ${diseaseVaccines[formattedDiseaseName].name}`);
+                
+                // Update the UI with our local data
+                updateVaccineUI(diseaseVaccines[formattedDiseaseName], formattedDiseaseName);
+                return;
+            }
+            
+            // Check for special cases and map them correctly
+            if (formattedDiseaseName.toLowerCase().includes('lumpy')) {
+                console.log("Lumpy disease detected, mapping to Lumpy Skin Disease vaccine");
+                
+                // Use our Lumpy Cows vaccine data regardless of the exact name
+                window.vaccineData = diseaseVaccines["Lumpy Cows"];
+                window.detectedDisease = "Lumpy Skin Disease";
+                
+                // Update the vaccine view button
+                const viewVaccineBtn = document.getElementById("viewVaccineBtn");
+                viewVaccineBtn.style.display = "inline-block";
+                viewVaccineBtn.href = `/vaccine?highlight=Lumpy%20Skin%20Disease`;
+                
+                // Update the Get Vaccine Info button text
+                $('#vaccineButtonText').html(`Vaccine: ${diseaseVaccines["Lumpy Cows"].name}`);
+                
+                updateVaccineUI(diseaseVaccines["Lumpy Cows"], "Lumpy Skin Disease");
+                return;
+            }
+            
+            // If not in our local database, fallback to API
+            console.log("No local data found, trying API");
+            fetch(`/api/vaccine-info/${encodeURIComponent(diseaseName)}`)
+                .then(response => {
+                    console.log("Response status:", response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Vaccine data received:", data);
+                    
+                    // If API returns no data or "Consult veterinarian", try our special mappings
+                    if (!data || !data.name || data.name === "Consult veterinarian") {
+                        // Try some common disease remappings for API inconsistencies
+                        if (formattedDiseaseName.toLowerCase().includes('lumpy')) {
+                            console.log("API returned no data, using local Lumpy Skin Disease data");
+                            data = diseaseVaccines["Lumpy Cows"];
+                        } else if (formattedDiseaseName.toLowerCase().includes('foot')) {
+                            console.log("API returned no data, using local Foot And Mouth Disease data");
+                            data = diseaseVaccines["Foot And Mouth Disease"];
+                        }
+                    }
+                    
+                    // Store vaccine data globally for recommendations
+                    window.vaccineData = data;
+                    window.detectedDisease = formattedDiseaseName;
+                    
+                    // Update the vaccine view button
+                    const viewVaccineBtn = document.getElementById("viewVaccineBtn");
+                    viewVaccineBtn.style.display = "inline-block";
+                    viewVaccineBtn.href = `/vaccine?highlight=${encodeURIComponent(formattedDiseaseName)}`;
+                    
+                    // Update the Get Vaccine Info button text
+                    if (data && data.name) {
+                        $('#vaccineButtonText').html(`Vaccine: ${data.name}`);
+                    } else {
+                        $('#vaccineButtonText').text("Get Vaccine Info");
+                    }
+                    
+                    // Update vaccine card with data
+                    if (data && data.name) {
+                        updateVaccineUI(data, formattedDiseaseName);
+                    } else {
+                        console.error("Invalid vaccine data received:", data);
+                        document.getElementById("vaccineRecommendationCard").style.display = "none";
+                        document.getElementById("vaccinationSection").style.display = "none";
+                        
+                        // Try the test endpoint as fallback
+                        tryTestEndpoint(diseaseName);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching vaccine data:", error);
+                    
+                    // In case of error, check if we have a local fallback for lumpy disease
+                    if (formattedDiseaseName.toLowerCase().includes('lumpy')) {
+                        console.log("API error, using local Lumpy Skin Disease data");
+                        window.vaccineData = diseaseVaccines["Lumpy Cows"];
+                        window.detectedDisease = "Lumpy Skin Disease";
+                        
+                        // Update button and UI
+                        const viewVaccineBtn = document.getElementById("viewVaccineBtn");
+                        viewVaccineBtn.style.display = "inline-block";
+                        viewVaccineBtn.href = `/vaccine?highlight=Lumpy%20Skin%20Disease`;
+                        $('#vaccineButtonText').html(`Vaccine: ${diseaseVaccines["Lumpy Cows"].name}`);
+                        
+                        updateVaccineUI(diseaseVaccines["Lumpy Cows"], "Lumpy Skin Disease");
+                        return;
+                    }
+                    
+                    document.getElementById("vaccineRecommendationCard").style.display = "none";
+                    document.getElementById("vaccinationSection").style.display = "none";
+                    
+                    // Try the test endpoint as fallback
+                    tryTestEndpoint(diseaseName);
+                });
+        }
+
+        // Helper function to update vaccine UI elements
+        function updateVaccineUI(data, formattedDiseaseName) {
+            // Show vaccination section
+            document.getElementById("vaccinationSection").style.display = "block";
+            
+            // Update vaccination section content
+            document.getElementById("vaccine-name").textContent = data.name;
+            document.getElementById("vaccine-description").textContent = data.description || '';
+            document.getElementById("vaccine-schedule").textContent = data.schedule || '';
+            document.getElementById("vaccine-administration").textContent = data.administration || '';
+            document.getElementById("vaccine-firstdose").textContent = data.first_dose_age || '';
+            document.getElementById("vaccine-effectiveness").textContent = `Effectiveness: ${data.effectiveness || 'Variable'}`;
+            document.getElementById("vaccine-sideeffects").textContent = data.side_effects || 'Minimal';
+            document.getElementById("vaccine-notes").textContent = data.notes || 'Consult your veterinarian for more information.';
+            
+            // Update vaccine details link
+            const vaccinationDetailsLink = document.getElementById("vaccinationDetailsLink");
+            if (vaccinationDetailsLink) {
+                vaccinationDetailsLink.href = `/vaccine?highlight=${encodeURIComponent(formattedDiseaseName)}`;
+            }
+            
+            // Force display block and add !important
+            const vaccineCard = document.getElementById("vaccineRecommendationCard");
+            if (vaccineCard) {
+                vaccineCard.style.setProperty('display', 'block', 'important');
+                console.log("Set vaccine card to display:block");
+                
+                // Update vaccine card contents
+                document.getElementById("vaccineName").textContent = data.name;
+                document.getElementById("vaccineDescription").textContent = data.description || '';
+                document.getElementById("vaccineSchedule").textContent = data.schedule || '';
+                document.getElementById("vaccineAdministration").textContent = data.administration || '';
+                document.getElementById("vaccineFirstDose").textContent = data.first_dose_age || '';
+                document.getElementById("vaccineEffectiveness").textContent = data.effectiveness || '';
+                
+                // Update the details link to use the highlight parameter
+                const vaccineDetailsLink = document.getElementById("vaccineDetailsLink");
+                if (vaccineDetailsLink) {
+                    vaccineDetailsLink.href = `/vaccine?highlight=${encodeURIComponent(formattedDiseaseName)}`;
+                }
+                
+                // Update recommendations to include vaccine info
+                updateRecommendations(window.currentRecommendations || []);
+                
+                // Scroll to make vaccination section visible
+                setTimeout(() => {
+                    document.getElementById("vaccinationSection").scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 500);
+                
+                // Add a visible highlight effect to draw attention
+                vaccineCard.classList.add('border-success');
+                vaccineCard.style.animation = 'pulse 2s';
+                
+                // Add a simple pulse animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes pulse {
+                        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+                        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+                        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+                    }
+                `;
+                document.head.appendChild(style);
+            } else {
+                console.error("Vaccine card element not found!");
+            }
+        }
+
+        // Try the test endpoint as a fallback
+        function tryTestEndpoint(diseaseName) {
+            console.log("Trying test endpoint for:", diseaseName);
+            
+            fetch(`/api/test-vaccine/${encodeURIComponent(diseaseName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Test endpoint response:", data);
+                    
+                    if (data.status === "success" && data.vaccine_data && data.vaccine_data.name) {
+                        // Store vaccine data globally for recommendations
+                        window.vaccineData = data.vaccine_data;
+                        window.detectedDisease = diseaseName;
+                        
+                        // Show vaccination section
+                        document.getElementById("vaccinationSection").style.display = "block";
+                        
+                        // Update vaccination section content
+                        document.getElementById("vaccine-name").textContent = data.vaccine_data.name;
+                        document.getElementById("vaccine-description").textContent = data.vaccine_data.description || '';
+                        document.getElementById("vaccine-schedule").textContent = data.vaccine_data.schedule || '';
+                        document.getElementById("vaccine-administration").textContent = data.vaccine_data.administration || '';
+                        document.getElementById("vaccine-firstdose").textContent = data.vaccine_data.first_dose_age || '';
+                        document.getElementById("vaccine-effectiveness").textContent = data.vaccine_data.effectiveness || '';
+                        document.getElementById("vaccine-sideeffects").textContent = data.vaccine_data.side_effects || 'Minimal';
+                        document.getElementById("vaccine-notes").textContent = data.vaccine_data.notes || 'Consult your veterinarian for more information.';
+                        
+                        // Update the vaccine view button
+                        const viewVaccineBtn = document.getElementById("viewVaccineBtn");
+                        viewVaccineBtn.style.display = "inline-block";
+                        viewVaccineBtn.href = `/vaccine?highlight=${encodeURIComponent(diseaseName)}`;
+                        
+                        // Update vaccine card with data from test endpoint
+                        const vaccineCard = document.getElementById("vaccineRecommendationCard");
+                        vaccineCard.style.setProperty('display', 'block', 'important');
+                        
+                        document.getElementById("vaccineName").textContent = data.vaccine_data.name;
+                        document.getElementById("vaccineDescription").textContent = data.vaccine_data.description || '';
+                        document.getElementById("vaccineSchedule").textContent = data.vaccine_data.schedule || '';
+                        document.getElementById("vaccineAdministration").textContent = data.vaccine_data.administration || '';
+                        document.getElementById("vaccineFirstDose").textContent = data.vaccine_data.first_dose_age || '';
+                        document.getElementById("vaccineEffectiveness").textContent = data.vaccine_data.effectiveness || '';
+                        
+                        // Update vaccine details link
+                        const vaccinationDetailsLink = document.getElementById("vaccinationDetailsLink");
+                        if (vaccinationDetailsLink) {
+                            vaccinationDetailsLink.href = `/vaccine?highlight=${encodeURIComponent(diseaseName)}`;
+                        }
+                        
+                        // Update recommendations to include vaccine info
+                        updateRecommendations(window.currentRecommendations || []);
+                        
+                        // Scroll to make vaccination section visible
+                        setTimeout(() => {
+                            document.getElementById("vaccinationSection").scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }, 500);
+                    } else {
+                        // Hide the vaccination section if no valid data
+                        document.getElementById("vaccinationSection").style.display = "none";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error with test endpoint:", error);
+                    document.getElementById("vaccinationSection").style.display = "none";
+                });
+        }
+
+        // Initialize the map after page load if the section is visible
+        if (!vetMapInitialized && $('#nearbyVetSection').is(':visible')) {
+            setTimeout(function() {
+                initVetMap();
+            }, 500);
+        }
+    });
+    
+    // Map functionality
+    let vetMap;
+    let vetMapInitialized = false;
+    
+    function initVetMap() {
+        console.log("initVetMap called");
+        if (vetMapInitialized) return;
+        
+        // Create initial map with India centered
+        vetMap = new google.maps.Map(document.getElementById("vetMap"), {
+            zoom: 5,
+            center: { lat: 20.5937, lng: 78.9629 }, // Center of India initially
+            mapTypeControl: true,
+            streetViewControl: false,
+            fullscreenControl: true,
+            zoomControl: true
+        });
+        
+        // Set up debug information display for easier troubleshooting
+        const debugDiv = document.createElement('div');
+        debugDiv.id = 'map-debug-info';
+        debugDiv.style.position = 'absolute';
+        debugDiv.style.bottom = '10px';
+        debugDiv.style.left = '10px';
+        debugDiv.style.backgroundColor = 'rgba(255,255,255,0.8)';
+        debugDiv.style.padding = '5px';
+        debugDiv.style.borderRadius = '5px';
+        debugDiv.style.fontSize = '12px';
+        debugDiv.style.maxWidth = '200px';
+        debugDiv.style.zIndex = '1000';
+        debugDiv.innerHTML = 'Loading map data...';
+        vetMap.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(debugDiv);
+        
+        // Force use of direct API call with no caching to ensure fresh data
+        console.log("Fetching farm location and veterinary services from /api/nearby-vets...");
+        const apiUrl = '/api/nearby-vets?' + new Date().getTime(); // Add timestamp to prevent caching
+        debugDiv.innerHTML = 'Calling API: ' + apiUrl;
+        
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            },
+            credentials: 'same-origin' // Ensure cookies are sent with the request for session handling
+        })
+            .then(response => {
+                console.log("API Response status:", response.status);
+                debugDiv.innerHTML += '<br>API Response status: ' + response.status;
+                return response.json();
+            })
+            .then(data => {
+                console.log("Farm location API response:", data);
+                debugDiv.innerHTML += '<br>Got API response data';
+                
+                if (data && data.farm && data.farm.latitude && data.farm.longitude) {
+                    // If we have farm coordinates, use them directly
+                    const farmLocation = { 
+                        lat: parseFloat(data.farm.latitude), 
+                        lng: parseFloat(data.farm.longitude) 
+                    };
+                    console.log("Using farm coordinates from API:", farmLocation);
+                    debugDiv.innerHTML += '<br>Farm coordinates: ' + farmLocation.lat.toFixed(4) + ', ' + farmLocation.lng.toFixed(4);
+                    
+                    // Center map on farm location
+                    vetMap.setCenter(farmLocation);
+                    vetMap.setZoom(14);
+                    
+                    // Add marker for farm
+                    addFarmMarker(farmLocation, data.farm.address || 'Your farm location');
+                    
+                    // Add nearby vet services
+                    if (data.vets && data.vets.length > 0) {
+                        console.log(`Adding ${data.vets.length} veterinary services from API`);
+                        debugDiv.innerHTML += '<br>Adding ' + data.vets.length + ' vet services';
+                        
+                        data.vets.forEach(vet => {
+                            if (vet.latitude && vet.longitude) {
+                                console.log(`Adding veterinary service: ${vet.name} at ${vet.latitude}, ${vet.longitude}`);
+                                addVetMarker({
+                                    position: { 
+                                        lat: parseFloat(vet.latitude), 
+                                        lng: parseFloat(vet.longitude) 
+                                    },
+                                    name: vet.name,
+                                    address: vet.address,
+                                    phone: vet.phone || '',
+                                    distance: vet.distance
+                                });
+                            }
+                        });
+                    } else {
+                        // If no vets in API response, search for nearby vets
+                        console.log("No veterinary services found in API response, searching nearby...");
+                        debugDiv.innerHTML += '<br>No vets found, searching...';
+                        searchNearbyVets(farmLocation);
+                    }
+                } else {
+                    // No farm data available, use default location (Mumbai)
+                    const defaultLocation = { lat: 19.076, lng: 72.877 };
+                    console.log("Farm data not available in API response, using default:", defaultLocation);
+                    debugDiv.innerHTML += '<br>Using default Mumbai location';
+                    
+                    // Center map on default location
+                    vetMap.setCenter(defaultLocation);
+                    vetMap.setZoom(12);
+                    
+                    // Add marker for default location
+                    addFarmMarker(defaultLocation, 'Default farm location');
+                    
+                    // Search for nearby vets
+                    searchNearbyVets(defaultLocation);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching farm data:", error);
+                debugDiv.innerHTML += '<br>Error: ' + error.message;
+                
+                // If API fails, use default location
+                const defaultLocation = { lat: 19.076, lng: 72.877 };
+                console.log("API error, using default location:", defaultLocation);
+                
+                // Center map on default location
+                vetMap.setCenter(defaultLocation);
+                vetMap.setZoom(12);
+                
+                // Add marker for default location
+                addFarmMarker(defaultLocation, 'Default farm location (API error)');
+                
+                // Search for nearby vets
+                searchNearbyVets(defaultLocation);
+            });
+        
+        vetMapInitialized = true;
+    }
+    
+    // Helper function to add farm marker
+    function addFarmMarker(position, address) {
+        console.log(`Adding farm marker at ${position.lat}, ${position.lng}`);
+        const farmMarker = new google.maps.Marker({
+            position: position,
+            map: vetMap,
+            title: "Your Farm",
+            icon: {
+                url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                scaledSize: new google.maps.Size(40, 40)
+            }
+        });
+        
+        const farmInfoContent = '<div class="map-info-window">' +
+            '<h5>Your Farm</h5>' +
+            '<p>' + address + '</p>' +
+            '</div>';
+            
+        const farmInfoWindow = new google.maps.InfoWindow({
+            content: farmInfoContent
+        });
+        
+        farmMarker.addListener("click", () => {
+            farmInfoWindow.open(vetMap, farmMarker);
+        });
+        
+        return farmMarker;
+    }
+    
+    // Helper function to add vet marker
+    function addVetMarker(vet) {
+        console.log("Adding vet marker:", vet.name);
+        
+        const vetMarker = new google.maps.Marker({
+            position: vet.position,
+            map: vetMap,
+            title: vet.name,
+            icon: {
+                url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                scaledSize: new google.maps.Size(32, 32)
+            }
+        });
+        
+        const vetInfoContent = '<div class="map-info-window">' +
+            '<h5>' + vet.name + '</h5>' +
+            '<p><i class="fas fa-map-marker-alt"></i> ' + vet.address + '</p>' +
+            (vet.phone ? '<p><i class="fas fa-phone"></i> ' + vet.phone + '</p>' : '') +
+            '<p><i class="fas fa-route"></i> ' + vet.distance + ' km away</p>' +
+            '<p><a href="https://maps.google.com/maps?daddr=' + 
+            vet.position.lat + ',' + vet.position.lng + 
+            '" target="_blank" class="btn btn-sm btn-outline-primary">Get Directions</a></p>' +
+            '</div>';
+            
+        const vetInfoWindow = new google.maps.InfoWindow({
+            content: vetInfoContent
+        });
+        
+        vetMarker.addListener("click", () => {
+            vetInfoWindow.open(vetMap, vetMarker);
+        });
+        
+        return vetMarker;
+    }
+    
+    // Find nearby vets when coordinates aren't in database
+    function searchNearbyVets(location) {
+        console.log(`Searching for nearby vets at: ${location.lat}, ${location.lng}`);
+        
+        // Use a secondary API call to get vets near this location
+        const apiUrl = `/api/nearby-vets?lat=${location.lat}&lng=${location.lng}`;
+        console.log(`Calling API: ${apiUrl}`);
+        
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.vets && data.vets.length > 0) {
+                    console.log(`Found ${data.vets.length} vets from secondary API call`);
+                    data.vets.forEach(vet => {
+                        if (vet.latitude && vet.longitude) {
+                            addVetMarker({
+                                position: { 
+                                    lat: parseFloat(vet.latitude), 
+                                    lng: parseFloat(vet.longitude) 
+                                },
+                                name: vet.name,
+                                address: vet.address,
+                                phone: vet.phone || '',
+                                distance: vet.distance
+                            });
+                        }
+                    });
+                } else {
+                    console.log("No vets found from API, using demo data");
+                    addDemoVets(location);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching nearby vets:", error);
+                console.log("Using demo vets due to API error");
+                addDemoVets(location);
+            });
+    }
+    
+    // Function to add demo vets as a last resort
+    function addDemoVets(location) {
+        console.log("Adding demo veterinary services around location:", location);
+        
+        // Create demo vets around the given location
+        const demoVets = [
+            { 
+                position: { 
+                    lat: location.lat + 0.01, 
+                    lng: location.lng + 0.015 
+                }, 
+                name: "District Veterinary Hospital",
+                address: "Main Road, City Center",
+                phone: "+91 1234567890",
+                distance: 2.4
+            },
+            { 
+                position: { 
+                    lat: location.lat - 0.008, 
+                    lng: location.lng + 0.012 
+                }, 
+                name: "Animal Care Center",
+                address: "Near Bus Stand",
+                phone: "+91 9876543210",
+                distance: 1.8
+            },
+            { 
+                position: { 
+                    lat: location.lat - 0.015, 
+                    lng: location.lng - 0.01 
+                }, 
+                name: "Livestock Health Center",
+                address: "Rural Area",
+                phone: "+91 7778889999",
+                distance: 3.5
+            }
+        ];
+        
+        // Add the vets to the map
+        demoVets.forEach(vet => addVetMarker(vet));
+    }
+    </script>
+
+<!-- Google Maps API -->
+<script 
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBu2-A5dCNjUj53YtTd91bXsZC__az5WqM&libraries=places" 
+  defer></script>
+{% endblock %}

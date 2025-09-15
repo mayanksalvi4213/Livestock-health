@@ -1,0 +1,20 @@
+<!-- Language Selector Component -->
+<div class="language-selector dropdown">
+    <button class="btn dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-globe"></i>
+        {{ languages[current_language].split(' ')[0] }}
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+        {% for code, name in languages.items() %}
+        <li>
+            <form action="{{ url_for('language.set_language') }}" method="post" id="lang-form-{{ code }}">
+                <input type="hidden" name="language" value="{{ code }}">
+                <input type="hidden" name="next" value="{{ request.url }}">
+                <button type="submit" class="dropdown-item {% if code == current_language %}active{% endif %}">
+                    {{ name }}
+                </button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</div> 

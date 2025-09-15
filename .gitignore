@@ -1,0 +1,19 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore virtual environments
+.venv/
+venv/
+env/
+
+# Ignore dataset (if not needed)
+dataset/
+dataset_corrupted/
+
+# Ignore temporary uploads
+tmp_uploads/
+
+# Ignore SQLite db if you don’t want to push it
+# *.db
+# instance/

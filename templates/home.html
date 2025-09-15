@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}AgriHealth: Farmer Home{% endblock %}
+
+{% block styles %}
+<style>
+    .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .new-feature {
+        border: 1px solid #2e7d32;
+        background-color: #f1f8e9;
+    }
+    
+    .home-content {
+        padding: 2rem;
+    }
+    
+    .welcome-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid home-content">
+    <h1 class="mb-4">Welcome to AgriHealth</h1>
+
+    <!-- Welcome Message -->
+    <div class="welcome-card">
+        <p class="text-success-emphasis">Welcome back! Here's a quick overview of your animal's health and activities. Use the options below to manage your animals, vaccines, and disease alerts.</p>
+    </div>
+
+    <!-- New Feature Highlight -->
+    <div class="p-4 rounded shadow-sm mb-4 new-feature">
+        <div class="row">
+            <div class="col-md-8">
+                <h4 class="text-success">🆕 New Feature: Advanced Breed Identification</h4>
+                <p>Our new AI-powered breed identification system can accurately identify cow breeds from images. Upload a photo and get instant breed identification with confidence scores.</p>
+                <a href="/breed" class="btn btn-success mt-2">Try Breed Identification</a>
+            </div>
+            <div class="col-md-4 text-center">
+                <img src="/static/ai_cow_icon.png" alt="AI Cow Recognition" style="max-width: 150px; height: auto;" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Feature Cards -->
+    <div class="row mt-4">
+        <!-- Health Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body">
+                    <h5 class="card-title text-success">Animal Health</h5>
+                    <p class="card-text">Monitor and manage the health status of your animals.</p>
+                    <a href="/health" class="btn btn-outline-success">Check Health</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vaccine Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body">
+                    <h5 class="card-title text-success">Vaccination</h5>
+                    <p class="card-text">Keep track of vaccination schedules and records.</p>
+                    <a href="/vaccine" class="btn btn-outline-success">View Vaccines</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Disease Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body">
+                    <h5 class="card-title text-success">Disease Alerts</h5>
+                    <p class="card-text">Stay updated about potential disease outbreaks.</p>
+                    <a href="/disease" class="btn btn-outline-success">Check Alerts</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Breed Identification Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body">
+                    <h5 class="card-title text-success">Breed Identification</h5>
+                    <p class="card-text">Identify cow breeds with our advanced AI image recognition system.</p>
+                    <a href="/breed" class="btn btn-outline-success">Identify Breeds</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Logout Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutLink = document.querySelector('a[href="/logout"]');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent the default link behavior
+                
+                // Show a confirmation popup
+                const confirmLogout = confirm("Are you sure you want to log out?");
+                if (confirmLogout) {
+                    // Perform logout actions
+                    window.location.href = "/logout"; // Redirect to the logout endpoint
+                }
+            });
+        }
+        
+        // Add hover effects for cards
+        const cards = document.querySelectorAll('.feature-card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.classList.add('shadow');
+            });
+            card.addEventListener('mouseleave', function() {
+                this.classList.remove('shadow');
+            });
+        });
+    });
+</script>
+{% endblock %}

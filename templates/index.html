@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriHealth - Animal Disease Detection</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            border-color: #4CAF50;
+        }
+        .btn-primary:hover {
+            background-color: #3e8e41;
+            border-color: #3e8e41;
+        }
+        .model-status {
+            margin-top: 15px;
+        }
+        .model-status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .model-available {
+            background-color: #4CAF50;
+        }
+        .model-unavailable {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AgriHealth</h1>
+            <p class="lead">Animal Disease and Breed Detection</p>
+        </div>
+
+        <div class="row">
+            <!-- Disease Detection Card -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Disease Detection</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>Upload an image to detect diseases in animals.</p>
+                        <form action="/predict_disease" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="animal_type_disease">Select Animal Type:</label>
+                                <select class="form-control" id="animal_type_disease" name="animal_type">
+                                    <option value="cow">Cow</option>
+                                    <option value="chicken">Chicken</option>
+                                    <option value="goat">Goat</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="file_disease">Upload Image:</label>
+                                <input type="file" class="form-control-file" id="file_disease" name="file" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Detect Disease</button>
+                        </form>
+                        <div class="model-status">
+                            <p>Models available:</p>
+                            <p>
+                                <span class="model-status-indicator {{ 'model-available' if available_models.cow_disease else 'model-unavailable' }}"></span> Cow
+                                <span class="model-status-indicator {{ 'model-available' if available_models.chicken_disease else 'model-unavailable' }}"></span> Chicken
+                                <span class="model-status-indicator {{ 'model-available' if available_models.goat_disease else 'model-unavailable' }}"></span> Goat
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Breed Detection Card -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Breed Detection</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>Upload an image to identify animal breeds.</p>
+                        <form action="/predict_breed" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="animal_type_breed">Select Animal Type:</label>
+                                <select class="form-control" id="animal_type_breed" name="animal_type">
+                                    <option value="cow">Cow</option>
+                                    <option value="chicken">Chicken</option>
+                                    <option value="goat">Goat</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="file_breed">Upload Image:</label>
+                                <input type="file" class="form-control-file" id="file_breed" name="file" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Detect Breed</button>
+                        </form>
+                        <div class="model-status">
+                            <p>Models available:</p>
+                            <p>
+                                <span class="model-status-indicator {{ 'model-available' if available_models.cow_breed else 'model-unavailable' }}"></span> Cow
+                                <span class="model-status-indicator {{ 'model-available' if available_models.chicken_breed else 'model-unavailable' }}"></span> Chicken
+                                <span class="model-status-indicator {{ 'model-available' if available_models.goat_breed else 'model-unavailable' }}"></span> Goat
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html> 

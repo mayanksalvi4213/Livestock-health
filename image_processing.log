@@ -1,0 +1,3 @@
+2025-04-01 12:01:34,215 - werkzeug - INFO - 127.0.0.1 - - [01/Apr/2025 12:01:34] "[35m[1mPOST /breed/predict?format=json HTTP/1.1[0m" 500 -
+2025-04-01 12:02:32,853 - werkzeug - INFO - 127.0.0.1 - - [01/Apr/2025 12:02:32] "[31m[1mPOST /breed/predict?format=json HTTP/1.1[0m" 400 -
+2025-04-01 12:04:00,883 - werkzeug - INFO -  * Detected change in 'C:\\Users\\mayank salvi\\Desktop\\livestock\\breed_predict.py', reloading

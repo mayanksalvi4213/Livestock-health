@@ -1,0 +1,279 @@
+/* Disease Alerts Page Styles */
+
+.page-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px 0;
+    margin-bottom: 30px;
+}
+
+.card {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    border: none;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.alert-card {
+    border-left: 4px solid;
+}
+
+.alert-high {
+    border-color: #dc3545;
+}
+
+.alert-medium {
+    border-color: #fd7e14;
+}
+
+.alert-low {
+    border-color: #ffc107;
+}
+
+.badge-high {
+    background-color: #dc3545;
+}
+
+.badge-medium {
+    background-color: #fd7e14;
+}
+
+.badge-low {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.disease-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.risk-level-indicator {
+    height: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+#map {
+    height: 400px;
+    width: 100%;
+    border-radius: 8px;
+}
+
+.risk-gauge {
+    position: relative;
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.risk-gauge-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.prevention-tip-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0;
+    margin-right: 15px;
+}
+
+.sticky-top {
+    top: 20px;
+    z-index: 100;
+}
+
+.disease-info-content ul {
+    padding-left: 20px;
+}
+
+.disease-info-content h5 {
+    margin-top: 20px;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.outbreak-location {
+    display: flex;
+    align-items: center;
+}
+
+.outbreak-location i {
+    margin-right: 5px;
+    color: #6c757d;
+}
+
+.alert-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.alert-summary-icon {
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.alert-summary-count {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.alert-summary-label {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.refresh-btn {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.refresh-btn:hover {
+    transform: rotate(180deg);
+}
+
+@media (max-width: 767.98px) {
+    .page-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    #map {
+        height: 300px;
+    }
+    
+    .disease-icon {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Update badge styles for better visibility */
+.badge.bg-warning {
+    color: #212529 !important; /* Dark text for better visibility on yellow background */
+}
+
+.badge.bg-info {
+    color: #212529 !important; /* Dark text for better visibility on light blue background */
+}
+
+.badge.bg-danger {
+    color: #fff !important; /* White text for red background */
+}
+
+/* Fix text in blue backgrounds throughout the page */
+.bg-info, .bg-primary {
+    color: #212529 !important;
+}
+
+/* Risk labels in the blue background buttons */
+[id$="Risk"] {
+    color: #212529 !important; /* Dark text for better visibility */
+    font-weight: bold;
+}
+
+/* Fix for location-filter buttons text */
+.btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.btn-outline-primary.active {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+/* Ensure all text in modals is visible */
+.modal-content {
+    color: #212529;
+}
+
+.alert-primary {
+    color: #084298;
+    background-color: #cfe2ff;
+    border-color: #b6d4fe;
+}
+
+/* For table headers in modal */
+.table-light {
+    color: #212529;
+}
+
+/* Fix visibility for icons and headings on white backgrounds */
+.card-header .fas.fa-cloud-sun,
+.card-header .fas.fa-filter,
+.card-header .fas.fa-shield-alt {
+    color: #0d6efd; /* Use primary blue color for better visibility */
+}
+
+.card-header h5.mb-0 {
+    color: #212529; /* Ensure headings are visible */
+    font-weight: 600;
+}
+
+/* Weather risk message styling */
+.temperature-health-issues {
+    margin-top: 15px;
+    padding: 10px 0;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.temperature-health-issues h6 {
+    color: #0d6efd;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.animal-health-issue {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+}
+
+.animal-health-issue:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.animal-health-issue h6 {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #212529;
+    font-weight: 600;
+}
+
+.animal-health-issue p {
+    font-size: 13px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}

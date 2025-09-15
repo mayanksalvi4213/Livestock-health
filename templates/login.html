@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Login" | translate }} - Livestock Health{% endblock %}
+
+{% block styles %}
+<style>
+    .login-page {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8f9fa;
+    }
+    
+    .login-container {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 500px;
+    }
+    
+    .login-logo {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .login-logo img {
+        height: 80px;
+    }
+    
+    .login-title {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: var(--primary-color);
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #2e7d32;
+    }
+    
+    .submit-btn {
+        margin-top: 1.5rem;
+    }
+    
+    .register-link {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+    
+    .input-group-text {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border-color: #ced4da;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-container">
+        <div class="login-logo">
+            <img src="/static/livestock_health_logo.svg" alt="Livestock Health Logo" onerror="this.src='/static/default_logo.svg'">
+        </div>
+        <h1 class="login-title">{{ "Login" | translate }}</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <!-- Flash messages are hidden as requested -->
+            {% endif %}
+        {% endwith %}
+        
+        <form method="post">
+            <div class="mb-3">
+                <label for="mobileNumber" class="form-label">{{ "Mobile Number" | translate }}</label>
+                <div class="input-group">
+                    <span class="input-group-text">+91</span>
+                    <input type="tel" class="form-control" id="mobileNumber" name="mobile_number" 
+                           pattern="[0-9]{10}" placeholder="{{ '10-digit mobile number' | translate }}" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="password" class="form-label">{{ "Password" | translate }}</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="rememberMe" name="remember">
+                <label class="form-check-label" for="rememberMe">{{ "Remember me" | translate }}</label>
+            </div>
+            
+            <div class="d-grid submit-btn">
+                <button type="submit" class="btn btn-success btn-lg">{{ "Login" | translate }}</button>
+            </div>
+        </form>
+        
+        <div class="register-link">
+            <p>{{ "Don't have an account?" | translate }} <a href="{{ url_for('auth.register') }}" class="text-success">{{ "Register" | translate }}</a></p>
+            <p>{{ "Forgot your password?" | translate }} <a href="{{ url_for('auth.forgot_password') }}" class="text-success">{{ "Reset Password" | translate }}</a></p>
+            <p><a href="{{ url_for('language.select') }}" class="text-secondary">
+                <i class="fas fa-language me-1"></i> {{ "Change Language" | translate }}
+            </a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Format mobile number input
+    const mobileInput = document.getElementById('mobileNumber');
+    
+    mobileInput.addEventListener('input', function(e) {
+        // Remove any non-digit characters
+        let value = e.target.value.replace(/\D/g, '');
+        
+        // Limit to 10 digits
+        if (value.length > 10) {
+            value = value.substring(0, 10);
+        }
+        
+        // Update the input value
+        e.target.value = value;
+    });
+</script>
+{% endblock %}

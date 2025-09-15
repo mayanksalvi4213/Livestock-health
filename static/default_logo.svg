@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="200" height="50">
+  <!-- Simple Default Logo -->
+  <rect x="15" y="10" width="35" height="35" rx="5" fill="#157347" />
+  <text x="60" y="35" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#157347">AgriHealth</text>
+</svg> 

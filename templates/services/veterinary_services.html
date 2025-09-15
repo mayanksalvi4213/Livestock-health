@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.veterinary_services or 'Veterinary Services' }}{% endblock %}
+
+{% block styles %}
+<style>
+    #map {
+        height: 500px;
+        width: 100%;
+        border-radius: 8px;
+    }
+    
+    .vet-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+    
+    .vet-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .map-info-window {
+        padding: 10px;
+        max-width: 300px;
+    }
+    
+    .vet-list {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    .star-rating {
+        color: #FFD700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">
+            <i class="fas fa-stethoscope me-2 text-primary"></i> {{ t.nearby_veterinary_services or 'Nearby Veterinary Services' }}
+        </h1>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> {{ t.back_to_dashboard or 'Back to Dashboard' }}
+        </a>
+    </div>
+    
+    {% if not farm or not farm.latitude or not farm.longitude %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i> {{ t.farm_location_missing or 'Your farm location is not set. Please update your farm profile with location details.' }}
+        <a href="{{ url_for('profile.edit_farm') }}" class="alert-link">{{ t.update_farm_profile or 'Update Farm Profile' }}</a>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <!-- Map Column -->
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-3">
+                    <div id="map"></div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-0 mt-3">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="m-0">{{ t.filter_search or 'Filter Search' }}</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="radiusRange" class="form-label">{{ t.search_radius or 'Search Radius' }}: <span id="radiusValue">20</span> km</label>
+                            <input type="range" class="form-range" id="radiusRange" min="5" max="50" step="5" value="20">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i> {{ t.search or 'Search' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- List Column -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="m-0">
+                            {{ t.found_results or 'Found Results' }}: 
+                            <span class="text-primary">{{ nearby_vets|length }}</span>
+                        </h5>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if nearby_vets %}
+                        <div class="vet-list">
+                            {% for vet in nearby_vets %}
+                                <div class="vet-card p-3 border-bottom" data-lat="{{ vet.latitude }}" data-lng="{{ vet.longitude }}" data-id="{{ loop.index }}">
+                                    <div class="d-flex justify-content-between">
+                                        <h5 class="mb-1">{{ vet.name }}</h5>
+                                        <span class="badge bg-primary rounded-pill">{{ vet.distance|round(1) }} km</span>
+                                    </div>
+                                    <p class="mb-1 text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i> {{ vet.address }}
+                                    </p>
+                                    {% if vet.contact_number %}
+                                        <p class="mb-1">
+                                            <i class="fas fa-phone me-1"></i> 
+                                            <a href="tel:{{ vet.contact_number }}">{{ vet.contact_number }}</a>
+                                        </p>
+                                    {% endif %}
+                                    {% if vet.rating %}
+                                        <div class="mb-2 star-rating">
+                                            <i class="fas fa-star"></i> {{ vet.rating|round(1) }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ vet.latitude }},{{ vet.longitude }}" 
+                                           target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-directions me-1"></i> {{ t.get_directions or 'Get Directions' }}
+                                        </a>
+                                        {% if vet.website %}
+                                            <a href="{{ vet.website }}" target="_blank" class="btn btn-sm btn-outline-secondary ms-1">
+                                                <i class="fas fa-globe me-1"></i> {{ t.website or 'Website' }}
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center">
+                            <img src="{{ url_for('static', filename='img/empty.svg') }}" alt="No results" class="img-fluid mb-3" style="max-height: 150px;">
+                            <h5>{{ t.no_veterinary_services_found or 'No Veterinary Services Found' }}</h5>
+                            <p class="text-muted">{{ t.try_adjusting_search or 'Try adjusting your search radius or update your farm location.' }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let map;
+    let markers = [];
+    let infoWindows = [];
+    
+    // Function to initialize the map
+    function initMap() {
+        {% if farm and farm.latitude and farm.longitude %}
+        // Create map centered on farm location
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 11,
+            center: { lat: {{ farm.latitude }}, lng: {{ farm.longitude }} },
+            mapTypeControl: true,
+            streetViewControl: false,
+            fullscreenControl: true,
+            zoomControl: true,
+        });
+        
+        // Add marker for farm
+        const farmMarker = new google.maps.Marker({
+            position: { lat: {{ farm.latitude }}, lng: {{ farm.longitude }} },
+            map: map,
+            title: "Your Farm",
+            icon: {
+                url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                scaledSize: new google.maps.Size(40, 40)
+            }
+        });
+        
+        const farmInfoWindow = new google.maps.InfoWindow({
+            content: '<div class="map-info-window">' +
+                '<h5>Your Farm</h5>' +
+                '<p>{{ farm.address }}, {{ farm.district }}, {{ farm.state }}</p>' +
+                '{% if farm.pincode %}<p>Pincode: {{ farm.pincode }}</p>{% endif %}' +
+                '</div>'
+        });
+        
+        farmMarker.addListener("click", () => {
+            closeAllInfoWindows();
+            farmInfoWindow.open(map, farmMarker);
+        });
+        
+        // Add markers for veterinary services
+        {% if nearby_vets %}
+            {% for vet in nearby_vets %}
+                addVetMarker({
+                    id: {{ loop.index }},
+                    position: { lat: {{ vet.latitude }}, lng: {{ vet.longitude }} },
+                    name: "{{ vet.name }}",
+                    address: "{{ vet.address }}",
+                    phone: "{{ vet.contact_number or '' }}",
+                    rating: {% if vet.rating %}{{ vet.rating }}{% else %}null{% endif %},
+                    website: "{{ vet.website or '' }}",
+                    distance: {{ vet.distance|round(1) }}
+                });
+            {% endfor %}
+        {% endif %}
+        {% else %}
+        // No farm location available
+        document.getElementById("map").innerHTML = 
+            '<div class="p-4 text-center">' +
+            '<p>Farm location data unavailable. Please update your farm profile with location details.</p>' +
+            '</div>';
+        {% endif %}
+    }
+    
+    // Function to add vet marker
+    function addVetMarker(vet) {
+        const vetMarker = new google.maps.Marker({
+            position: vet.position,
+            map: map,
+            title: vet.name,
+            icon: {
+                url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                scaledSize: new google.maps.Size(32, 32)
+            }
+        });
+        
+        markers.push(vetMarker);
+        
+        const ratingHtml = vet.rating ? 
+            `<div class="mb-2"><i class="fas fa-star" style="color: #FFD700;"></i> ${vet.rating.toFixed(1)}</div>` : '';
+        
+        const phoneHtml = vet.phone ? 
+            `<p><i class="fas fa-phone"></i> <a href="tel:${vet.phone}">${vet.phone}</a></p>` : '';
+        
+        const websiteHtml = vet.website ? 
+            `<a href="${vet.website}" target="_blank" class="btn btn-sm btn-outline-secondary me-1">
+                <i class="fas fa-globe"></i> Website
+            </a>` : '';
+        
+        const vetInfoContent = `
+            <div class="map-info-window">
+                <h5>${vet.name}</h5>
+                <p><i class="fas fa-map-marker-alt"></i> ${vet.address}</p>
+                ${phoneHtml}
+                ${ratingHtml}
+                <p><i class="fas fa-route"></i> ${vet.distance} km away</p>
+                <div>
+                    ${websiteHtml}
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${vet.position.lat},${vet.position.lng}" 
+                       target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-directions"></i> Get Directions
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        const vetInfoWindow = new google.maps.InfoWindow({
+            content: vetInfoContent
+        });
+        
+        infoWindows.push(vetInfoWindow);
+        
+        vetMarker.addListener("click", () => {
+            closeAllInfoWindows();
+            vetInfoWindow.open(map, vetMarker);
+            highlightListItem(vet.id);
+        });
+    }
+    
+    // Function to close all info windows
+    function closeAllInfoWindows() {
+        for (let window of infoWindows) {
+            window.close();
+        }
+    }
+    
+    // Function to highlight list item when marker is clicked
+    function highlightListItem(id) {
+        const items = document.querySelectorAll('.vet-card');
+        items.forEach(item => {
+            item.classList.remove('bg-light');
+            if (item.dataset.id == id) {
+                item.classList.add('bg-light');
+                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+    
+    // Event listener for radius range input
+    document.getElementById('radiusRange').addEventListener('input', function() {
+        document.getElementById('radiusValue').textContent = this.value;
+    });
+    
+    // Event listener for filter form submission
+    document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const radius = document.getElementById('radiusRange').value;
+        window.location.href = `{{ url_for('services.veterinary_services') }}?radius=${radius}`;
+    });
+    
+    // Event listeners for vet cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const vetCards = document.querySelectorAll('.vet-card');
+        vetCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const lat = parseFloat(this.dataset.lat);
+                const lng = parseFloat(this.dataset.lng);
+                const id = parseInt(this.dataset.id);
+                
+                map.setCenter({ lat, lng });
+                map.setZoom(14);
+                
+                // Trigger click on the corresponding marker
+                google.maps.event.trigger(markers[id-1], 'click');
+                
+                // Highlight this card
+                highlightListItem(id);
+            });
+        });
+    });
+</script>
+
+<!-- Google Maps API -->
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBu2-A5dCNjUj53YtTd91bXsZC__az5WqM&amp;libraries=places&amp;callback=initMap">
+</script>
+{% endblock %} 

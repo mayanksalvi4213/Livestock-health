@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240px" height="50px" viewBox="0 0 240 50" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <rect fill="#4CAF50" x="0" y="0" width="50" height="50" rx="4"></rect>
+    <path d="M25,10 L40,25 L35,25 L35,40 L15,40 L15,25 L10,25 L25,10 Z" fill="#FFFFFF"></path>
+    <text font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="bold" fill="#333333">
+      <tspan x="60" y="30">Livestock Health</tspan>
+    </text>
+  </g>
+</svg> 
