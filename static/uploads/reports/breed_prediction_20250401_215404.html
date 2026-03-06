@@ -1,0 +1,83 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Breed Identification Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
+                .header { text-align: center; padding: 20px; background-color: #157347; color: white; margin-bottom: 20px; border-radius: 5px; }
+                .result-section { margin: 20px 0; background-color: #f9f9f9; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                .characteristics { margin-left: 20px; }
+                img { max-width: 100%; height: auto; margin: 20px auto; display: block; max-height: 400px; border-radius: 5px; }
+                h1, h2, h3 { color: #157347; }
+                .footer { text-align: center; margin-top: 30px; font-size: 0.8em; color: #777; }
+                table { width: 100%; border-collapse: collapse; }
+                td, th { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+                @media print {
+                    .no-print { display: none; }
+                    body { padding: 0; }
+                    .header { background-color: #f9f9f9 !important; color: #333 !important; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Breed Identification Report</h1>
+                <p>Generated on 2025-04-01 21:54:04</p>
+            </div>
+            
+            <div class="result-section">
+                <h2>Identification Result</h2>
+                <table>
+                    <tr>
+                        <th>Breed:</th>
+                        <td>jersey</td>
+                    </tr>
+                    <tr>
+                        <th>Confidence:</th>
+                        <td>95.7%</td>
+                    </tr>
+                    <tr>
+                        <th>Animal Type:</th>
+                        <td>Cow</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="result-section">
+                <h2>Breed Characteristics</h2>
+                <table>
+        
+                </table>
+            </div>
+            
+            <div class="footer">
+                <p>© AgriHealth Livestock Identification System</p>
+                <p>This report was automatically generated. For more information, please visit our website.</p>
+            </div>
+            
+            <script class="no-print">
+                // Auto-print when loaded
+                window.onload = function() {
+                    // Add a print button
+                    var printBtn = document.createElement('button');
+                    printBtn.innerHTML = 'Print Report';
+                    printBtn.style.display = 'block';
+                    printBtn.style.margin = '20px auto';
+                    printBtn.style.padding = '10px 15px';
+                    printBtn.style.backgroundColor = '#157347';
+                    printBtn.style.color = 'white';
+                    printBtn.style.border = 'none';
+                    printBtn.style.borderRadius = '5px';
+                    printBtn.style.cursor = 'pointer';
+                    printBtn.onclick = function() { window.print(); };
+                    
+                    document.body.insertBefore(printBtn, document.querySelector('.footer'));
+                }
+            </script>
+        </body>
+        </html>
+        

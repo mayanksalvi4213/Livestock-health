@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriHealth - Prediction Results</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            border-color: #4CAF50;
+        }
+        .btn-primary:hover {
+            background-color: #3e8e41;
+            border-color: #3e8e41;
+        }
+        .progress {
+            height: 25px;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AgriHealth</h1>
+            <p class="lead">{{ result_type }} Detection Results</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Results for {{ animal_type }}</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if success %}
+                            <h5 class="card-title">Top Predictions</h5>
+                            {% for prediction in predictions %}
+                                <div class="mb-3">
+                                    <p class="mb-1">{{ prediction.class }} ({{ "%.2f"|format(prediction.probability*100) }}%)</p>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ prediction.probability*100 }}%" 
+                                            aria-valuenow="{{ prediction.probability*100 }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ "%.2f"|format(prediction.probability*100) }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-danger">
+                                <h5 class="alert-heading">Error</h5>
+                                <p>{{ message }}</p>
+                            </div>
+                        {% endif %}
+                        <a href="/" class="btn btn-primary mt-3">Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html> 

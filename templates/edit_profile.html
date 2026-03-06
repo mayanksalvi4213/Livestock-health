@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - Livestock Health{% endblock %}
+
+{% block styles %}
+<style>
+  .profile-edit-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .profile-section {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  
+  .profile-section h3 {
+    color: #198754;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+  }
+  
+  .back-btn {
+    margin-bottom: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container profile-edit-container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Edit Profile</h1>
+    <a href="{{ url_for('profile.index') }}" class="btn btn-outline-secondary back-btn">
+      <i class="fas fa-arrow-left"></i> Back to Profile
+    </a>
+  </div>
+  
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <form method="post">
+    <div class="profile-section">
+      <h3><i class="fas fa-user-circle me-2"></i> Personal Information</h3>
+      
+      <div class="mb-3">
+        <label for="name" class="form-label">Full Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{ user.full_name }}" required>
+      </div>
+      
+      <div class="mb-3">
+        <label for="mobile_number" class="form-label">Mobile Number</label>
+        <input type="text" class="form-control" id="mobile_number" value="{{ user.mobile_number }}" readonly disabled>
+        <small class="text-muted">Mobile number cannot be changed</small>
+      </div>
+      
+      <div class="mb-3">
+        <label for="language" class="form-label">Preferred Language</label>
+        <select class="form-select" id="language" name="language">
+          {% for lang in languages.items() %}
+            <option value="{{ lang[0] }}" {% if user.preferred_language and user.preferred_language.code == lang[0] %}selected{% endif %}>
+              {{ lang[1] }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div class="profile-section">
+      <h3><i class="fas fa-key me-2"></i> Change Password</h3>
+      <p class="text-muted mb-3">Leave blank if you don't want to change your password</p>
+      
+      <div class="mb-3">
+        <label for="current_password" class="form-label">Current Password</label>
+        <input type="password" class="form-control" id="current_password" name="current_password">
+      </div>
+      
+      <div class="mb-3">
+        <label for="new_password" class="form-label">New Password</label>
+        <input type="password" class="form-control" id="new_password" name="new_password" minlength="8">
+        <small class="text-muted">Password must be at least 8 characters long</small>
+      </div>
+    </div>
+    
+    {% if farm %}
+    <div class="profile-section">
+      <h3><i class="fas fa-home me-2"></i> Farm Information</h3>
+      
+      <div class="mb-3">
+        <label for="farm_name" class="form-label">Farm Name</label>
+        <input type="text" class="form-control" id="farm_name" name="farm_name" value="{{ farm.name or '' }}">
+      </div>
+      
+      <div class="mb-3">
+        <label for="farm_address" class="form-label">Farm Address</label>
+        <input type="text" class="form-control" id="farm_address" name="farm_address" value="{{ farm.address }}" required>
+      </div>
+      
+      <div class="mb-3">
+        <label for="district" class="form-label">District</label>
+        <input type="text" class="form-control" id="district" name="district" value="{{ farm.district }}" required>
+      </div>
+      
+      <div class="mb-3">
+        <label for="pincode" class="form-label">PIN Code</label>
+        <input type="text" class="form-control" id="pincode" name="pincode" value="{{ farm.pincode }}" 
+               pattern="[0-9]{6}" title="Enter a valid 6-digit PIN code" maxlength="6" required>
+        <small class="text-muted">Enter your 6-digit postal PIN code</small>
+      </div>
+      
+      <div class="mb-3">
+        <label for="state" class="form-label">State</label>
+        <select class="form-select" id="state" name="state" required>
+          <option value="">Select State</option>
+          <option value="Andhra Pradesh" {% if farm.state == 'Andhra Pradesh' %}selected{% endif %}>Andhra Pradesh</option>
+          <option value="Arunachal Pradesh" {% if farm.state == 'Arunachal Pradesh' %}selected{% endif %}>Arunachal Pradesh</option>
+          <option value="Assam" {% if farm.state == 'Assam' %}selected{% endif %}>Assam</option>
+          <option value="Bihar" {% if farm.state == 'Bihar' %}selected{% endif %}>Bihar</option>
+          <option value="Chhattisgarh" {% if farm.state == 'Chhattisgarh' %}selected{% endif %}>Chhattisgarh</option>
+          <option value="Goa" {% if farm.state == 'Goa' %}selected{% endif %}>Goa</option>
+          <option value="Gujarat" {% if farm.state == 'Gujarat' %}selected{% endif %}>Gujarat</option>
+          <option value="Haryana" {% if farm.state == 'Haryana' %}selected{% endif %}>Haryana</option>
+          <option value="Himachal Pradesh" {% if farm.state == 'Himachal Pradesh' %}selected{% endif %}>Himachal Pradesh</option>
+          <option value="Jharkhand" {% if farm.state == 'Jharkhand' %}selected{% endif %}>Jharkhand</option>
+          <option value="Karnataka" {% if farm.state == 'Karnataka' %}selected{% endif %}>Karnataka</option>
+          <option value="Kerala" {% if farm.state == 'Kerala' %}selected{% endif %}>Kerala</option>
+          <option value="Madhya Pradesh" {% if farm.state == 'Madhya Pradesh' %}selected{% endif %}>Madhya Pradesh</option>
+          <option value="Maharashtra" {% if farm.state == 'Maharashtra' %}selected{% endif %}>Maharashtra</option>
+          <option value="Manipur" {% if farm.state == 'Manipur' %}selected{% endif %}>Manipur</option>
+          <option value="Meghalaya" {% if farm.state == 'Meghalaya' %}selected{% endif %}>Meghalaya</option>
+          <option value="Mizoram" {% if farm.state == 'Mizoram' %}selected{% endif %}>Mizoram</option>
+          <option value="Nagaland" {% if farm.state == 'Nagaland' %}selected{% endif %}>Nagaland</option>
+          <option value="Odisha" {% if farm.state == 'Odisha' %}selected{% endif %}>Odisha</option>
+          <option value="Punjab" {% if farm.state == 'Punjab' %}selected{% endif %}>Punjab</option>
+          <option value="Rajasthan" {% if farm.state == 'Rajasthan' %}selected{% endif %}>Rajasthan</option>
+          <option value="Sikkim" {% if farm.state == 'Sikkim' %}selected{% endif %}>Sikkim</option>
+          <option value="Tamil Nadu" {% if farm.state == 'Tamil Nadu' %}selected{% endif %}>Tamil Nadu</option>
+          <option value="Telangana" {% if farm.state == 'Telangana' %}selected{% endif %}>Telangana</option>
+          <option value="Tripura" {% if farm.state == 'Tripura' %}selected{% endif %}>Tripura</option>
+          <option value="Uttar Pradesh" {% if farm.state == 'Uttar Pradesh' %}selected{% endif %}>Uttar Pradesh</option>
+          <option value="Uttarakhand" {% if farm.state == 'Uttarakhand' %}selected{% endif %}>Uttarakhand</option>
+          <option value="West Bengal" {% if farm.state == 'West Bengal' %}selected{% endif %}>West Bengal</option>
+        </select>
+      </div>
+      
+      <div class="mb-3">
+        <label class="form-label">GPS Coordinates</label>
+        <div class="input-group">
+          <input type="text" class="form-control" value="{% if farm.latitude and farm.longitude %}{{ farm.latitude }}, {{ farm.longitude }}{% else %}Not available{% endif %}" readonly disabled>
+          <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+        </div>
+        <small class="text-muted">Coordinates are determined using Google Maps based on your address, district, state, and PIN code.</small>
+      </div>
+      
+      <div class="alert alert-info">
+        <div class="d-flex align-items-center mb-2">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Location Information</strong>
+        </div>
+        <p class="small mb-0">Your farm's location will be used to:</p>
+        <ul class="small mb-0">
+          <li>Show nearby veterinary services on an interactive map</li>
+          <li>Calculate distances to relevant services</li>
+          <li>Alert you about disease outbreaks in your area</li>
+        </ul>
+        <p class="small mt-2 mb-0">For best results, please provide an accurate and complete address.</p>
+      </div>
+    </div>
+    {% else %}
+    <div class="profile-section">
+      <h3><i class="fas fa-home me-2"></i> Farm Information</h3>
+      <div class="alert alert-warning">
+        No farm information found for your account. Please fill in the details below to create your farm profile.
+      </div>
+      
+      <div class="mb-3">
+        <label for="farm_name" class="form-label">Farm Name</label>
+        <input type="text" class="form-control" id="farm_name" name="farm_name">
+      </div>
+      
+      <div class="mb-3">
+        <label for="farm_address" class="form-label">Farm Address</label>
+        <input type="text" class="form-control" id="farm_address" name="farm_address" required>
+      </div>
+      
+      <div class="mb-3">
+        <label for="district" class="form-label">District</label>
+        <input type="text" class="form-control" id="district" name="district" required>
+      </div>
+      
+      <div class="mb-3">
+        <label for="pincode" class="form-label">PIN Code</label>
+        <input type="text" class="form-control" id="pincode" name="pincode" required>
+        <small class="text-muted">Enter your 6-digit postal PIN code</small>
+      </div>
+      
+      <div class="mb-3">
+        <label for="state" class="form-label">State</label>
+        <select class="form-select" id="state" name="state" required>
+          <option value="">Select State</option>
+          <option value="Andhra Pradesh">Andhra Pradesh</option>
+          <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+          <option value="Assam">Assam</option>
+          <option value="Bihar">Bihar</option>
+          <option value="Chhattisgarh">Chhattisgarh</option>
+          <option value="Goa">Goa</option>
+          <option value="Gujarat">Gujarat</option>
+          <option value="Haryana">Haryana</option>
+          <option value="Himachal Pradesh">Himachal Pradesh</option>
+          <option value="Jharkhand">Jharkhand</option>
+          <option value="Karnataka">Karnataka</option>
+          <option value="Kerala">Kerala</option>
+          <option value="Madhya Pradesh">Madhya Pradesh</option>
+          <option value="Maharashtra">Maharashtra</option>
+          <option value="Manipur">Manipur</option>
+          <option value="Meghalaya">Meghalaya</option>
+          <option value="Mizoram">Mizoram</option>
+          <option value="Nagaland">Nagaland</option>
+          <option value="Odisha">Odisha</option>
+          <option value="Punjab">Punjab</option>
+          <option value="Rajasthan">Rajasthan</option>
+          <option value="Sikkim">Sikkim</option>
+          <option value="Tamil Nadu">Tamil Nadu</option>
+          <option value="Telangana">Telangana</option>
+          <option value="Tripura">Tripura</option>
+          <option value="Uttar Pradesh">Uttar Pradesh</option>
+          <option value="Uttarakhand">Uttarakhand</option>
+          <option value="West Bengal">West Bengal</option>
+        </select>
+      </div>
+      
+      <div class="alert alert-info">
+        <div class="d-flex align-items-center mb-2">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Location Information</strong>
+        </div>
+        <p class="small mb-0">Your farm's location will be used to:</p>
+        <ul class="small mb-0">
+          <li>Show nearby veterinary services on an interactive map</li>
+          <li>Calculate distances to relevant services</li>
+          <li>Alert you about disease outbreaks in your area</li>
+        </ul>
+        <p class="small mt-2 mb-0">After saving, we'll use Google Maps to determine your farm's coordinates based on the address details you provide.</p>
+      </div>
+    </div>
+    {% endif %}
+    
+    <div class="d-grid">
+      <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get form field references
+    const farmAddressField = document.getElementById('farm_address');
+    const districtField = document.getElementById('district');
+    const pincodeField = document.getElementById('pincode');
+    const stateField = document.getElementById('state');
+    const coordsField = document.querySelector('.input-group input');
+    
+    // Track if location fields have been changed
+    let locationFieldsChanged = false;
+    
+    // Function to validate PIN code
+    function validatePincode(pincode) {
+      const pincodeRegex = /^[0-9]{6}$/;
+      return pincodeRegex.test(pincode);
+    }
+    
+    // Function to check if location fields have been modified
+    function checkLocationFieldsChanged() {
+      if (!locationFieldsChanged && coordsField && coordsField.value !== 'Not available') {
+        // If coordinates exist and we're changing address fields, show a warning
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'alert alert-warning mt-2 location-warning';
+        warningDiv.innerHTML = '<small><i class="fas fa-exclamation-triangle me-1"></i> Changing location details will update your farm\'s coordinates when you save.</small>';
+        
+        // Only add the warning once
+        if (!document.querySelector('.location-warning')) {
+          farmAddressField.parentNode.appendChild(warningDiv);
+        }
+        
+        locationFieldsChanged = true;
+      }
+    }
+    
+    // Add event listeners for location fields
+    if (farmAddressField) {
+      farmAddressField.addEventListener('change', checkLocationFieldsChanged);
+    }
+    
+    if (districtField) {
+      districtField.addEventListener('change', checkLocationFieldsChanged);
+    }
+    
+    if (stateField) {
+      stateField.addEventListener('change', checkLocationFieldsChanged);
+    }
+    
+    // Add PIN code validation
+    if (pincodeField) {
+      pincodeField.addEventListener('change', function() {
+        const pincode = this.value.trim();
+        
+        if (pincode && !validatePincode(pincode)) {
+          this.classList.add('is-invalid');
+          
+          // Add error message if it doesn't exist
+          if (!this.nextElementSibling.classList.contains('invalid-feedback')) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            errorDiv.textContent = 'Please enter a valid 6-digit PIN code';
+            this.parentNode.insertBefore(errorDiv, this.nextSibling);
+          }
+        } else {
+          this.classList.remove('is-invalid');
+          // Remove error message if it exists
+          const errorDiv = this.nextElementSibling;
+          if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+            errorDiv.remove();
+          }
+        }
+        
+        checkLocationFieldsChanged();
+      });
+    }
+    
+    // Form validation before submit
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', function(event) {
+        let isValid = true;
+        
+        // Validate PIN code if present
+        if (pincodeField && pincodeField.value) {
+          if (!validatePincode(pincodeField.value.trim())) {
+            pincodeField.classList.add('is-invalid');
+            isValid = false;
+          }
+        }
+        
+        if (!isValid) {
+          event.preventDefault();
+        }
+      });
+    }
+  });
+</script>
+{% endblock %} 

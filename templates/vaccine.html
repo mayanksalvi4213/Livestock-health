@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.vaccine_information }} - Livestock Health{% endblock %}
+
+{% block styles %}
+<style>
+    .page-header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 20px 0;
+        margin-bottom: 30px;
+    }
+    .card {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .vaccine-card {
+        transition: transform 0.3s;
+    }
+    .vaccine-card:hover {
+        transform: translateY(-5px);
+    }
+    .badge-success {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .search-card {
+        background-color: #f8f9fa;
+        border-left: 4px solid var(--primary-color);
+    }
+    .animal-filter {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .animal-filter.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .animal-filter:hover:not(.active) {
+        background-color: rgba(21, 115, 71, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+        <div class="container">
+        <h1 class="display-4">{{ t.vaccine_information }}</h1>
+        <p class="lead">{{ t.essential_vaccines }}</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Search and Filter Card -->
+            <div class="card mb-4 search-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search-vaccine" placeholder="{{ t.search_vaccines }}">
+                                <button class="btn btn-success" type="button">
+                                    <i class="fas fa-search"></i>
+            </button>
+            </div>
+        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-md-end mt-3 mt-md-0">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-success animal-filter active" data-animal="all">{{ t.all }}</button>
+                                    <button type="button" class="btn btn-outline-success animal-filter" data-animal="cow">{{ t.cows }}</button>
+                                    <button type="button" class="btn btn-outline-success animal-filter" data-animal="goat">{{ t.goats }}</button>
+                                    <button type="button" class="btn btn-outline-success animal-filter" data-animal="chicken">{{ t.chicken }}</button>
+        </div>
+            </div>
+        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Introduction Card -->
+            <div class="card mb-4">
+                    <div class="card-body">
+                    <h5 class="card-title">{{ t.understanding_livestock_vaccines }}</h5>
+                    <p class="card-text">{{ t.vaccines_description }}</p>
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-info-circle me-2"></i> {{ t.vaccine_reminder }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vaccines Section -->
+            <h3 class="mb-4">{{ t.available_vaccines }}</h3>
+            <div class="row" id="vaccines-container">
+                <!-- Cow Vaccines -->
+                {% for vaccine in cow_vaccines %}
+                <div class="col-md-6 mb-4 vaccine-item" data-animal="cow">
+                    <div class="card h-100 vaccine-card">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" data-translate="{{ vaccine.disease }}">{{ vaccine.disease }}</h5>
+                            <span class="badge bg-light text-success" data-translate="Cow">Cow</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text" data-translate="{{ vaccine.description }}">{{ vaccine.description }}</p>
+                            <div class="mt-3">
+                                <p><strong data-translate="Schedule">Schedule:</strong> <span data-translate="{{ vaccine.schedule }}">{{ vaccine.schedule }}</span></p>
+                                <p><strong data-translate="Administration">Administration:</strong> <span data-translate="{{ vaccine.administration }}">{{ vaccine.administration }}</span></p>
+                                <p><strong data-translate="Age for first dose">Age for first dose:</strong> <span data-translate="{{ vaccine.first_dose_age }}">{{ vaccine.first_dose_age }}</span></p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#vaccineModal" data-vaccine="{{ vaccine.disease|lower|replace(' ', '_') }}">
+                                <i class="fas fa-info-circle me-1"></i> <span data-translate="More Information">More Information</span>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Goat Vaccines -->
+                {% for vaccine in goat_vaccines %}
+                <div class="col-md-6 mb-4 vaccine-item" data-animal="goat">
+                    <div class="card h-100 vaccine-card">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" data-translate="{{ vaccine.disease }}">{{ vaccine.disease }}</h5>
+                            <span class="badge bg-light text-success" data-translate="Goat">Goat</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text" data-translate="{{ vaccine.description }}">{{ vaccine.description }}</p>
+                            <div class="mt-3">
+                                <p><strong data-translate="Schedule">Schedule:</strong> <span data-translate="{{ vaccine.schedule }}">{{ vaccine.schedule }}</span></p>
+                                <p><strong data-translate="Administration">Administration:</strong> <span data-translate="{{ vaccine.administration }}">{{ vaccine.administration }}</span></p>
+                                <p><strong data-translate="Age for first dose">Age for first dose:</strong> <span data-translate="{{ vaccine.first_dose_age }}">{{ vaccine.first_dose_age }}</span></p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#vaccineModal" data-vaccine="{{ vaccine.disease|lower|replace(' ', '_') }}">
+                                <i class="fas fa-info-circle me-1"></i> <span data-translate="More Information">More Information</span>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Chicken Vaccines -->
+                {% for vaccine in chicken_vaccines %}
+                <div class="col-md-6 mb-4 vaccine-item" data-animal="chicken">
+                    <div class="card h-100 vaccine-card">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" data-translate="{{ vaccine.disease }}">{{ vaccine.disease }}</h5>
+                            <span class="badge bg-light text-success" data-translate="Chicken">Chicken</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text" data-translate="{{ vaccine.description }}">{{ vaccine.description }}</p>
+                            <div class="mt-3">
+                                <p><strong data-translate="Schedule">Schedule:</strong> <span data-translate="{{ vaccine.schedule }}">{{ vaccine.schedule }}</span></p>
+                                <p><strong data-translate="Administration">Administration:</strong> <span data-translate="{{ vaccine.administration }}">{{ vaccine.administration }}</span></p>
+                                <p><strong data-translate="Age for first dose">Age for first dose:</strong> <span data-translate="{{ vaccine.first_dose_age }}">{{ vaccine.first_dose_age }}</span></p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#vaccineModal" data-vaccine="{{ vaccine.disease|lower|replace(' ', '_') }}">
+                                <i class="fas fa-info-circle me-1"></i> <span data-translate="More Information">More Information</span>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vaccine Information Modal -->
+<div class="modal fade" id="vaccineModal" tabindex="-1" aria-labelledby="vaccineModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="vaccineModalLabel" data-translate="Vaccine Information">Vaccine Information</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="vaccineModalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="Close">Close</button>
+                <button type="button" class="btn btn-success" data-translate="Download Information">Download Information</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reminder Modal -->
+<div class="modal fade" id="reminderModal" tabindex="-1" aria-labelledby="reminderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="reminderModalLabel">{{ t.set_vaccination_reminder }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reminderForm">
+                    <div class="mb-3">
+                        <label for="reminderAnimal" class="form-label">{{ t.animal }}</label>
+                        <select class="form-select" id="reminderAnimal" required>
+                            <option value="">{{ t.select_animal }}</option>
+                            <option value="cow1">{{ t.cow }} - Lakshmi</option>
+                            <option value="cow2">{{ t.cow }} - Ganga</option>
+                            <option value="buffalo1">{{ t.buffalo }} - Kali</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reminderDate" class="form-label">{{ t.date }}</label>
+                        <input type="date" class="form-control" id="reminderDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reminderNotes" class="form-label">{{ t.notes }}</label>
+                        <textarea class="form-control" id="reminderNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
+                <button type="button" class="btn btn-primary" id="saveReminderBtn">{{ t.save_reminder }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Add jQuery explicitly -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+        // Ensure vaccine data is translated on page load
+        function translateVaccineContent() {
+            if (window.translator) {
+                // Find all elements with data-translate and translate them
+                document.querySelectorAll('[data-translate]').forEach(element => {
+                    const originalText = element.getAttribute('data-translate');
+                    if (originalText && originalText.trim()) {
+                        window.translator.translate(originalText)
+                            .then(translatedText => {
+                                if (translatedText && translatedText !== originalText) {
+                                    element.textContent = translatedText;
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error translating element:', error);
+                            });
+                    }
+                });
+            }
+        }
+        
+        // Call translation after a short delay to ensure DOM is fully loaded
+        setTimeout(translateVaccineContent, 300);
+
+        // Add direct click handler to each button
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all filter buttons
+            const filterButtons = document.querySelectorAll('.animal-filter');
+            
+            // Add click event to each button
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    console.log('Filter button clicked');
+                    
+                    // Get the animal type from data attribute
+                    const animalType = this.getAttribute('data-animal');
+                    console.log('Animal type:', animalType);
+                    
+                    // Update active button
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Get all vaccine items
+                    const vaccineItems = document.querySelectorAll('.vaccine-item');
+                    
+                    // Show/hide based on filter
+                    vaccineItems.forEach(item => {
+                        if (animalType === 'all') {
+                            item.style.display = 'block';
+                        } else if (item.getAttribute('data-animal') === animalType) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+        
+        // Initialize search functionality with vanilla JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-vaccine');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    console.log('Searching for:', searchTerm);
+                    
+                    // Get currently active animal filter
+                    const activeButton = document.querySelector('.animal-filter.active');
+                    const activeAnimal = activeButton ? activeButton.getAttribute('data-animal') : 'all';
+                    
+                    // Filter items based on search and animal type
+                    const vaccineItems = document.querySelectorAll('.vaccine-item');
+                    vaccineItems.forEach(item => {
+                        const cardText = item.textContent.toLowerCase();
+                        const animalType = item.getAttribute('data-animal');
+                        
+                        // Item should be visible if text matches AND (all animals are shown OR this is the selected animal type)
+                        const textMatches = cardText.includes(searchTerm);
+                        const animalMatches = (activeAnimal === 'all' || activeAnimal === animalType);
+                        
+                        item.style.display = (textMatches && animalMatches) ? 'block' : 'none';
+                    });
+                });
+            }
+        });
+        
+        // Initialize vaccine modal
+        const vaccineModal = document.getElementById('vaccineModal');
+        const modalTitle = document.getElementById('vaccineModalLabel');
+        const modalBody = document.getElementById('vaccineModalBody');
+        
+        vaccineModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const vaccineKey = button.getAttribute('data-vaccine');
+            const vaccineName = button.closest('.card').querySelector('.card-header h5').textContent;
+            
+            modalTitle.textContent = vaccineName + ' Vaccine Information';
+            
+            // Add loading spinner
+            modalBody.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading vaccine information...</p>
+                </div>
+            `;
+            
+            // Convert vaccine key back to disease name
+            const diseaseName = vaccineName;
+            
+            // Fetch vaccine information from API
+            fetch(`/api/vaccine-info/${encodeURIComponent(diseaseName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Generate detailed vaccine information
+                    let content = `
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4 data-translate="${data.name}">${data.name}</h4>
+                                <p data-translate="${data.description}">${data.description}</p>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-info-circle me-2"></i> <span data-translate="${data.notes}">${data.notes}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h5 data-translate="Vaccination Details">Vaccination Details</h5>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span data-translate="Schedule">Schedule:</span>
+                                        <span class="text-success fw-bold" data-translate="${data.schedule}">${data.schedule}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span data-translate="First dose at">First dose at:</span>
+                                        <span class="text-success fw-bold" data-translate="${data.first_dose_age}">${data.first_dose_age}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span data-translate="Administration">Administration:</span>
+                                        <span class="text-success fw-bold" data-translate="${data.administration}">${data.administration}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span data-translate="Effectiveness">Effectiveness:</span>
+                                        <span class="text-success fw-bold" data-translate="${data.effectiveness}">${data.effectiveness}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- Additional Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 data-translate="Side Effects">Side Effects</h5>
+                                <p data-translate="${data.side_effects}">${data.side_effects}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 data-translate="Storage">Storage</h5>
+                                <p data-translate="${data.storage}">${data.storage}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modalBody.innerHTML = content;
+
+                    // Add translation trigger for modal content
+                    setTimeout(() => {
+                        if (window.translator) {
+                            // Translate all modal content
+                            document.querySelectorAll('#vaccineModalBody [data-translate]').forEach(element => {
+                                const originalText = element.getAttribute('data-translate');
+                                if (originalText && originalText.trim()) {
+                                    window.translator.translate(originalText)
+                                        .then(translatedText => {
+                                            if (translatedText && translatedText !== originalText) {
+                                                element.textContent = translatedText;
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error translating modal element:', error);
+                                        });
+                                }
+                            });
+                        }
+                    }, 100);
+                })
+                .catch(error => {
+                    modalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Error loading vaccine information. Please try again.
+                        </div>
+                    `;
+                    console.error('Error fetching vaccine data:', error);
+                });
+        });
+        
+        // Convert disease highlighting to vanilla JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for highlighted disease from URL parameter
+            const highlightDisease = '{{ highlight_disease }}';
+            if (highlightDisease && highlightDisease !== 'None') {
+                console.log('Highlighting disease:', highlightDisease);
+                
+                // Find the matching vaccine card using vanilla JS
+                const matchingCards = [];
+                document.querySelectorAll('.vaccine-item').forEach(item => {
+                    const cardHeader = item.querySelector('.card-header h5');
+                    if (cardHeader) {
+                        const diseaseName = cardHeader.textContent.trim();
+                        
+                        if (diseaseName.toLowerCase() === highlightDisease.toLowerCase()) {
+                            matchingCards.push(item);
+                        }
+                    }
+                });
+                
+                if (matchingCards.length > 0) {
+                    // Apply highlighting to the matching cards
+                    matchingCards.forEach(card => {
+                        // Add a highlighted class
+                        const cardElement = card.querySelector('.card');
+                        if (cardElement) {
+                            cardElement.classList.add('border-success', 'border-3');
+                            cardElement.style.backgroundColor = 'rgba(40, 167, 69, 0.05)';
+                        }
+                        
+                        // Make sure the appropriate animal filter is selected
+                        const animalType = card.getAttribute('data-animal');
+                        const filterBtn = document.querySelector(`.animal-filter[data-animal="${animalType}"]`);
+                        if (filterBtn) {
+                            // Trigger a click on the filter button
+                            filterBtn.click();
+                        }
+                        
+                        // Scroll to the first matching card
+                        window.setTimeout(() => {
+                            matchingCards[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
+                    });
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

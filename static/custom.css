@@ -1,0 +1,262 @@
+/* Custom styles for AgriHealth application */
+
+:root {
+  --primary-color: #4CAF50;
+  --primary-dark: #3c8c40;
+  --primary-light: #7bd67f;
+  --secondary-color: #FF9800;
+  --text-color: #333333;
+  --light-text: #666666;
+  --background: #f8f9fa;
+  --card-bg: #ffffff;
+  --border-color: #e4e4e4;
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --info: #17a2b8;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-color);
+  background-color: var(--background);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+.navbar {
+  background-color: var(--primary-color);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+  font-weight: bold;
+  color: white !important;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.card {
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.auth-container {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 30px;
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  padding: 20px;
+  border-radius: 8px;
+  background-color: var(--card-bg);
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.stat-label {
+  color: var(--light-text);
+  margin-top: 5px;
+}
+
+.alert-high {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-left: 4px solid var(--danger);
+}
+
+.alert-medium {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-left: 4px solid var(--warning);
+}
+
+.alert-low {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-left: 4px solid var(--success);
+}
+
+.form-control:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+.animal-card {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.animal-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.animal-info {
+  padding: 15px;
+}
+
+.animal-name {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+.animal-type {
+  color: var(--light-text);
+  margin-bottom: 10px;
+}
+
+.footer {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 30px 0;
+  margin-top: 50px;
+}
+
+.footer a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.dropdown-item:active {
+  background-color: var(--primary-color);
+}
+
+/* Disease alert center */
+.severity-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.severity-high {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: var(--danger);
+}
+
+.severity-medium {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #b37400;
+}
+
+.severity-low {
+  background-color: rgba(40, 167, 69, 0.2);
+  color: var(--success);
+}
+
+/* Health check image upload */
+.upload-area {
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.3s;
+  background-color: #f8f9fa;
+  margin-bottom: 20px;
+}
+
+.upload-area:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(76, 175, 80, 0.05);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .auth-container {
+    margin: 20px;
+    padding: 20px;
+  }
+} 

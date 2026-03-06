@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.disease_alerts }} - Livestock Health{% endblock %}
+
+{% block styles %}
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+    .page-header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 20px 0;
+        margin-bottom: 30px;
+    }
+    .card {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .alert-card {
+        border-left: 4px solid;
+        transition: transform 0.3s;
+    }
+    .alert-card:hover {
+        transform: translateY(-5px);
+    }
+    .alert-high {
+        border-color: #dc3545;
+    }
+    .alert-medium {
+        border-color: #fd7e14;
+    }
+    .alert-low {
+        border-color: #ffc107;
+    }
+    .alert-info {
+        border-color: #0dcaf0;
+    }
+    .badge-high {
+        background-color: #dc3545;
+    }
+    .badge-medium {
+        background-color: #fd7e14;
+    }
+    .badge-low {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .badge-info {
+        background-color: #0dcaf0;
+    }
+    .location-filter {
+            cursor: pointer;
+        transition: all 0.2s;
+    }
+    .location-filter.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .disease-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-right: 15px;
+    }
+    .risk-level-indicator {
+        height: 8px;
+        border-radius: 4px;
+        margin-top: 8px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <h1 class="display-4">{{ t.disease_alerts }}</h1>
+        <p class="lead">{{ t.monitor_outbreaks }}</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Introduction Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ t.disease_alert_center }}</h5>
+                    <p class="card-text">{{ t.disease_monitoring_description }}</p>
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-shield-alt me-2"></i> {{ t.monitoring_details }}
+                    </div>
+                </div>
+    </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">{{ t.filter_alerts }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label">{{ t.by_location }}:</label>
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-outline-success location-filter active" data-location="all">{{ t.all }}</button>
+                                <button type="button" class="btn btn-outline-success location-filter" data-location="local">{{ t.local }}</button>
+                                <button type="button" class="btn btn-outline-success location-filter" data-location="nearby">{{ t.nearby }}</button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label">{{ t.by_animal }}:</label>
+                            <select class="form-select" id="animal-filter">
+                                <option value="all">{{ t.all_animals }}</option>
+                                <option value="cow">{{ t.cows }}</option>
+                                <option value="goat">{{ t.goats }}</option>
+                                <option value="chicken">{{ t.chicken }}</option>
+                                <option value="poultry">{{ t.poultry }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ t.by_risk_level }}:</label>
+                            <select class="form-select" id="risk-filter">
+                                <option value="all">{{ t.all }}</option>
+                                <option value="high">{{ t.high_risk }}</option>
+                                <option value="medium">{{ t.medium_risk }}</option>
+                                <option value="low">{{ t.low_risk }}</option>
+                                <option value="info">{{ t.informational }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alert Summary -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ t.high_risk }}</h5>
+                            <h2 class="mb-0">2</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ t.medium_risk }}</h5>
+                            <h2 class="mb-0">3</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="card bg-info text-dark">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ t.low_risk }}</h5>
+                            <h2 class="mb-0">5</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ t.total_alerts }}</h5>
+                            <h2 class="mb-0">10</h2>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+            <!-- Disease Alerts -->
+            <h3 class="mb-4">{{ t.current_outbreaks }}</h3>
+            
+            <!-- High Risk Alerts -->
+            <div class="alert-item" data-risk="high" data-location="local" data-animal="cow">
+                <div class="card alert-card alert-high mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="disease-icon bg-danger text-white">
+                                <i class="fas fa-viruses fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">Foot and Mouth Disease</h4>
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="badge badge-high me-2">{{ t.high_risk }}</span>
+                                    <span class="text-muted">Reported 2 days ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="card-text">Outbreak reported in neighboring villages within 15km of your location. Highly contagious viral disease affecting cloven-hoofed animals.</p>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <span class="text-muted me-3"><i class="fas fa-map-marker-alt me-1"></i> {{ t.local }} (15km)</span>
+                                <span class="text-muted"><i class="fas fa-cow me-1"></i> {{ t.cows }}, Other Ruminants</span>
+                            </div>
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#diseaseModal" data-disease="fmd">
+                                {{ t.view_details }}
+                            </button>
+                        </div>
+                        <div class="risk-level-indicator bg-danger w-100"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert-item" data-risk="high" data-location="nearby" data-animal="poultry">
+                <div class="card alert-card alert-high mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="disease-icon bg-danger text-white">
+                                <i class="fas fa-biohazard fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">Avian Influenza</h4>
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="badge badge-high me-2">High Risk</span>
+                                    <span class="text-muted">Reported 1 week ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="card-text">Confirmed cases of H5N1 in commercial poultry farms in the district. Highly pathogenic strain with significant mortality rates.</p>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <span class="text-muted me-3"><i class="fas fa-map-marker-alt me-1"></i> Nearby (30km)</span>
+                                <span class="text-muted"><i class="fas fa-kiwi-bird me-1"></i> Poultry</span>
+                            </div>
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#diseaseModal" data-disease="avian">
+                                View Details
+                            </button>
+                        </div>
+                        <div class="risk-level-indicator bg-danger w-100"></div>
+                    </div>
+            </div>
+        </div>
+
+            <!-- Medium Risk Alerts -->
+            <div class="alert-item" data-risk="medium" data-location="nearby" data-animal="cow">
+                <div class="card alert-card alert-medium mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="disease-icon bg-warning text-dark">
+                                <i class="fas fa-virus fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">Mastitis</h4>
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="badge badge-medium me-2">Medium Risk</span>
+                                    <span class="text-muted">Updated yesterday</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="card-text">Increased cases of mastitis reported in dairy farms within the district. Monitor your cows for any signs of udder inflammation.</p>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <span class="text-muted me-3"><i class="fas fa-map-marker-alt me-1"></i> Nearby (25km)</span>
+                                <span class="text-muted"><i class="fas fa-cow me-1"></i> Dairy Cows</span>
+                            </div>
+                            <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#diseaseModal" data-disease="mastitis">
+                                View Details
+                            </button>
+                        </div>
+                        <div class="risk-level-indicator bg-warning w-100"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert-item" data-risk="medium" data-location="local" data-animal="chicken">
+                <div class="card alert-card alert-medium mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="disease-icon bg-warning text-dark">
+                                <i class="fas fa-virus fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">Coccidiosis</h4>
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="badge badge-medium me-2">Medium Risk</span>
+                                    <span class="text-muted">Updated 3 days ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="card-text">Increased cases of coccidiosis in poultry farms reported in your area. Monitor chickens for bloody diarrhea and reduced feed intake. Preventative medication recommended.</p>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <span class="text-muted me-3"><i class="fas fa-map-marker-alt me-1"></i> Local (10km)</span>
+                                <span class="text-muted"><i class="fas fa-kiwi-bird me-1"></i> Chickens</span>
+                            </div>
+                            <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#diseaseModal" data-disease="coccidiosis">
+                                View Details
+                            </button>
+                        </div>
+                        <div class="risk-level-indicator bg-warning w-100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Risk Alerts -->
+            <div class="alert-item" data-risk="low" data-location="local" data-animal="goat">
+                <div class="card alert-card alert-low mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="disease-icon bg-info text-dark">
+                                <i class="fas fa-bug fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">External Parasites</h4>
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="badge badge-low me-2">Low Risk</span>
+                                    <span class="text-muted">Seasonal advisory</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="card-text">Seasonal increase in tick and mite activity expected due to warming temperatures. Preventive treatment recommended for goats and poultry, especially for mites and lice in chickens.</p>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <span class="text-muted me-3"><i class="fas fa-map-marker-alt me-1"></i> Local (Regional)</span>
+                                <span class="text-muted"><i class="fas fa-horse me-1"></i> Goats, Chicken</span>
+                            </div>
+                            <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#diseaseModal" data-disease="parasites">
+                                View Details
+                            </button>
+                        </div>
+                        <div class="risk-level-indicator bg-info w-100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disease Information Modal -->
+<div class="modal fade" id="diseaseModal" tabindex="-1" aria-labelledby="diseaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="diseaseModalLabel">{{ t.disease_information }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="diseaseModalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.close }}</button>
+                <button type="button" class="btn btn-success">{{ t.prevention_guide }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Location filters
+        const locationFilters = document.querySelectorAll('.location-filter');
+        locationFilters.forEach(filter => {
+            filter.addEventListener('click', function() {
+                // Update active state
+                locationFilters.forEach(f => f.classList.remove('active'));
+                this.classList.add('active');
+                
+                filterAlerts();
+            });
+        });
+        
+        // Animal and risk level filters
+        const animalFilter = document.getElementById('animal-filter');
+        const riskFilter = document.getElementById('risk-filter');
+        
+        animalFilter.addEventListener('change', filterAlerts);
+        riskFilter.addEventListener('change', filterAlerts);
+        
+        // Filter alerts based on selected criteria
+        function filterAlerts() {
+            const selectedLocation = document.querySelector('.location-filter.active').getAttribute('data-location');
+            const selectedAnimal = animalFilter.value;
+            const selectedRisk = riskFilter.value;
+            
+            const alertItems = document.querySelectorAll('.alert-item');
+            
+            alertItems.forEach(item => {
+                const locationMatch = selectedLocation === 'all' || item.getAttribute('data-location') === selectedLocation;
+                const animalMatch = selectedAnimal === 'all' || item.getAttribute('data-animal') === selectedAnimal;
+                const riskMatch = selectedRisk === 'all' || item.getAttribute('data-risk') === selectedRisk;
+                
+                if (locationMatch && animalMatch && riskMatch) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // Disease modal content loading
+        const diseaseModal = document.getElementById('diseaseModal');
+        const modalBody = document.getElementById('diseaseModalBody');
+        const modalTitle = document.getElementById('diseaseModalLabel');
+        
+        diseaseModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const disease = button.getAttribute('data-disease');
+            const diseaseName = button.closest('.card').querySelector('h4').textContent;
+            
+            modalTitle.textContent = diseaseName + ' Information';
+            
+            // Load disease-specific information
+            let content = '';
+            switch(disease) {
+                case 'fmd':
+                    content = `
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <img src="/static/diseases/fmd.jpg" class="img-fluid rounded" alt="FMD">
+                            </div>
+                            <div class="col-md-8">
+                                <h4>Foot and Mouth Disease (FMD)</h4>
+                                <p>A highly contagious viral disease affecting cloven-hoofed animals. It causes fever and blister-like sores on the tongue, lips, mouth, teats, and hooves.</p>
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> Take immediate preventive action - this disease spreads rapidly and can cause significant economic losses.
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h5>Symptoms</h5>
+                        <ul>
+                            <li>High fever (103-105°F)</li>
+                            <li>Excessive salivation and drooling</li>
+                            <li>Vesicles (blisters) on tongue, gums, lips, teats, and feet</li>
+                            <li>Lameness, reluctance to move</li>
+                            <li>Reduced milk production</li>
+                            <li>Loss of appetite and depression</li>
+                        </ul>
+                        <h5>Prevention Measures</h5>
+                        <ol>
+                            <li>Maintain strict biosecurity protocols</li>
+                            <li>Restrict movement of animals and people</li>
+                            <li>Disinfect vehicles, equipment, and clothing</li>
+                            <li>Ensure regular vaccination according to schedule</li>
+                            <li>Monitor animals daily for early signs</li>
+                        </ol>
+                    `;
+                    break;
+                case 'coccidiosis':
+                    content = `
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <img src="/static/diseases/coccidiosis.jpg" class="img-fluid rounded" alt="Coccidiosis in Chickens" onerror="this.src='/static/default_disease.jpg'">
+                            </div>
+                            <div class="col-md-8">
+                                <h4>Coccidiosis in Chickens</h4>
+                                <p>A parasitic disease caused by protozoan parasites of the genus Eimeria that infect the intestinal tract of chickens. It's one of the most common and economically significant diseases in poultry farming.</p>
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> Requires prompt treatment to prevent spread and economic losses. Most severe in young birds.
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h5>Symptoms</h5>
+                        <ul>
+                            <li>Bloody diarrhea</li>
+                            <li>Decreased feed and water consumption</li>
+                            <li>Weight loss and dehydration</li>
+                            <li>Ruffled feathers and droopiness</li>
+                            <li>Pale combs and wattles</li>
+                            <li>Increased mortality in severe cases</li>
+                        </ul>
+                        <h5>Prevention and Treatment</h5>
+                        <ol>
+                            <li>Use of anticoccidial drugs in feed or water</li>
+                            <li>Maintain dry litter conditions</li>
+                            <li>Practice good biosecurity measures</li>
+                            <li>Vaccination in commercial flocks</li>
+                            <li>Regular cleaning and disinfection of housing</li>
+                            <li>Proper stocking density to avoid overcrowding</li>
+                        </ol>
+                    `;
+                    break;
+                default:
+                    content = `<p>Detailed information about this disease will be available soon.</p>`;
+            }
+            
+            modalBody.innerHTML = content;
+        });
+    });
+    </script>
+{% endblock %}

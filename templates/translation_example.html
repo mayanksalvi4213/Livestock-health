@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Translation Example" | translate }} - Livestock Health{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-5">
+        <div class="col-12">
+            <h1 class="mb-4">{{ "Translation Example" | translate }}</h1>
+            <p class="lead">{{ "This page demonstrates the different ways to translate content in the application." | translate }}</p>
+            <div class="alert alert-info">
+                {{ "Current language" | translate }}: <strong>{{ g.language }} - {{ g.available_languages[g.language] }}</strong>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ "Server-side Translation" | translate }}</h5>
+                </div>
+                <div class="card-body">
+                    <h6>{{ "Using the translate filter" | translate }}</h6>
+                    <pre class="bg-light p-2 rounded">{{ '{{ "Hello, world!" | translate }}' }}</pre>
+                    <p>{{ "Result" | translate }}: <strong>{{ "Hello, world!" | translate }}</strong></p>
+                    
+                    <h6 class="mt-4">{{ "Using the translate function" | translate }}</h6>
+                    <pre class="bg-light p-2 rounded">{{ '{{ translate("Good morning!") }}' }}</pre>
+                    <p>{{ "Result" | translate }}: <strong>{{ translate("Good morning!") }}</strong></p>
+                    
+                    <h6 class="mt-4">{{ "Using the t dictionary" | translate }}</h6>
+                    <pre class="bg-light p-2 rounded">{{ '{{ t.welcome }}' }}</pre>
+                    <p>{{ "Result" | translate }}: <strong>{{ t.welcome }}</strong></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">{{ "Client-side Translation" | translate }}</h5>
+                </div>
+                <div class="card-body">
+                    <h6>{{ "Using data-translate attribute" | translate }}</h6>
+                    <pre class="bg-light p-2 rounded">&lt;span data-translate="Welcome to our app"&gt;&lt;/span&gt;</pre>
+                    <p>{{ "Result" | translate }}: <span data-translate="Welcome to our app"></span></p>
+                    
+                    <h6 class="mt-4">{{ "Using JavaScript translator" | translate }}</h6>
+                    <pre class="bg-light p-2 rounded">translator.translate("Have a great day!")</pre>
+                    <p>{{ "Result" | translate }}: <strong id="js-translate-result">Loading...</strong></p>
+                    
+                    <h6 class="mt-4">{{ "Dynamic translation" | translate }}</h6>
+                    <div class="input-group mb-3">
+                        <input type="text" id="textToTranslate" class="form-control" placeholder="{{ 'Text to translate' | translate }}">
+                        <button class="btn btn-outline-primary" type="button" id="translateBtn">{{ "Translate" | translate }}</button>
+                    </div>
+                    <p>{{ "Result" | translate }}: <strong id="dynamic-result"></strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">{{ "Available Languages" | translate }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for code, name in g.available_languages.items() %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title">{{ name }}</h6>
+                                    <p class="card-text small mb-1">{{ "Code" | translate }}: <code>{{ code }}</code></p>
+                                    <a href="#" class="btn btn-sm btn-outline-primary" 
+                                       onclick="window.translator.changeLanguage('{{ code }}'); return false;">
+                                        {{ "Switch to this language" | translate }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // JavaScript translation example
+    translator.translate("Have a great day!").then(result => {
+        document.getElementById('js-translate-result').textContent = result;
+    });
+    
+    // Dynamic translation
+    document.getElementById('translateBtn').addEventListener('click', function() {
+        const text = document.getElementById('textToTranslate').value;
+        if (text) {
+            translator.translate(text).then(result => {
+                document.getElementById('dynamic-result').textContent = result;
+            });
+        }
+    });
+    
+    // Also allow Enter key in the input field
+    document.getElementById('textToTranslate').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('translateBtn').click();
+        }
+    });
+});
+</script>
+{% endblock %} 

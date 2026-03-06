@@ -1,0 +1,817 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.breed_identification }} - Livestock Health{% endblock %}
+
+{% block styles %}
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<style>
+    .upload-container {
+        background-color: #f8f9fa;
+        border: 2px dashed var(--primary-color);
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .upload-container:hover, .upload-container.dragover {
+        background-color: rgba(21, 115, 71, 0.1);
+        border-color: var(--dark-color);
+    }
+    .preview-image {
+        max-width: 100%;
+        max-height: 400px;
+        margin-top: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        object-fit: contain;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    #file-input {
+        display: none;
+    }
+    .page-header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 20px 0;
+        margin-bottom: 30px;
+    }
+    .card {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .animal-card {
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+    .animal-card:hover {
+        transform: translateY(-5px);
+    }
+    .animal-card.selected {
+        border-color: var(--primary-color);
+        background-color: rgba(21, 115, 71, 0.1);
+    }
+    .animal-icon {
+        font-size: 3rem;
+        margin-bottom: 10px;
+    }
+    /* Result Styles */
+    .breed-description {
+        border-left: 3px solid var(--primary-color);
+        background-color: #f8f9fa;
+    }
+    .confidence-level {
+        height: 8px;
+        background-color: var(--primary-color);
+        border-radius: 4px;
+        transition: width 0.5s ease-in-out;
+    }
+    .confidence-bar {
+        width: 100px;
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+    }
+    .confidence-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .result-section {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .result-section:last-child {
+        border-bottom: none;
+    }
+    #result-image {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .breed-image-container {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <h1 class="display-4">{{ t.breed_identification }}</h1>
+        <p class="lead">{{ t.upload_animal_photo }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Introduction -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="text-success mb-3"><i class="fas fa-info-circle me-2"></i>{{ t.breed_identification_service }}</h4>
+            <p>{{ t.breed_identification_description }}</p>
+            <p class="mb-0 text-muted"><small>{{ t.best_results }}</small></p>
+        </div>
+    </div>
+
+    <!-- Animal Type Selection -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-4">{{ t.animal_type }}</h5>
+            <div class="row text-center">
+                <div class="col-md-4 mb-3">
+                    <div class="animal-card p-3 rounded selected" data-animal-type="cow">
+                        <i class="fas fa-cow animal-icon text-success"></i>
+                        <h5>{{ t.cows }}</h5>
+                        <p class="text-muted small">Identify Cow breeds</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="animal-card p-3 rounded" data-animal-type="goat">
+                        <i class="fas fa-goat animal-icon text-success"></i>
+                        <h5>{{ t.goats }}</h5>
+                        <p class="text-muted small">Identify Goat breeds</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="animal-card p-3 rounded" data-animal-type="chicken">
+                        <i class="fas fa-kiwi-bird animal-icon text-success"></i>
+                        <h5>{{ t.chicken }}</h5>
+                        <p class="text-muted small">Identify chicken breeds</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-4">{{ t.upload_breed_image }}</h5>
+            <div id="error-container" class="alert alert-danger d-none mb-4"></div>
+            <form id="upload-form" action="/breed/predict" method="post" enctype="multipart/form-data">
+                <input type="hidden" id="animal-type" name="animalType" value="cow">
+                <div class="upload-container" id="upload-container">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-success mb-3"></i>
+                    <h5>{{ t.drop_image }}</h5>
+                    <p>{{ t.or }} <span class="text-success">{{ t.browse_files }}</span></p>
+                    <input type="file" id="file-input" name="image" accept="image/png, image/jpeg, image/jpg" required>
+                </div>
+                
+                <div id="image-preview-container" class="text-center mt-4 d-none">
+                    <img id="image-preview" class="preview-image">
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-secondary me-2" id="change-image-btn">
+                            <i class="fas fa-exchange-alt me-1"></i> {{ t.change_image }}
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-search me-1"></i> {{ t.analyze_image }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Analysis Results (Initially Hidden) -->
+    <div class="card mb-4 d-none" id="result-container">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">{{ t.breed_identification_results }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="breed-image-container mb-3 mb-md-0">
+                        <img id="result-image" src="" alt="{{ t.breed_image }}" class="img-fluid">
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="result-section mb-4">
+                        <h4 class="mb-3">{{ t.identification_result }}</h4>
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <h5 class="mb-1" id="detected-breed">{{ t.loading_results }}</h5>
+                                <div class="d-flex align-items-center">
+                                    <div class="confidence-bar me-2">
+                                        <div id="confidence-level" class="confidence-level" style="width: 0%;"></div>
+                                    </div>
+                                    <span class="confidence-text">{{ t.confidence }}: <span id="confidence-value">0</span>%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h5>{{ t.breed_characteristics }}</h5>
+                        <div id="breed-description" class="breed-description p-3 bg-light rounded">
+                            {{ t.loading_breed_information }}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <button id="back-button" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i> {{ t.try_another }}
+                        </button>
+                        <div>
+                            <button class="btn btn-primary me-2" id="save-results">
+                                <i class="fas fa-save me-2"></i> {{ t.save_results }}
+                            </button>
+                            <button class="btn btn-success" id="view-more-info">
+                                <i class="fas fa-info-circle me-2"></i> {{ t.more_breed_info }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other Breed Predictions (Initially Hidden) -->
+    <div class="card d-none" id="other-breeds-container">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">{{ t.other_possible_breeds }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row" id="other-breeds-row">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this modal for More Info -->
+<div class="modal fade" id="moreInfoModal" tabindex="-1" aria-labelledby="moreInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="moreInfoModalLabel">Detailed Breed Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="breed-history" class="mb-4">
+                    <h4>History</h4>
+                    <p class="breed-history-text"></p>
+                </div>
+                
+                <div id="physical-traits" class="mb-4">
+                    <h4>Physical Traits</h4>
+                    <ul class="physical-traits-list"></ul>
+                </div>
+                
+                <div id="breed-advantages" class="mb-4">
+                    <h4>Advantages</h4>
+                    <ul class="advantages-list"></ul>
+                </div>
+                
+                <div id="care-tips" class="mb-4">
+                    <h4>Care Tips</h4>
+                    <ul class="care-tips-list"></ul>
+                </div>
+                
+                <div id="resources">
+                    <h4>Additional Resources</h4>
+                    <ul class="resources-list"></ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+<!-- jsPDF for client-side PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    // jsPDF initialization
+    const { jsPDF } = window.jspdf;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadForm = document.getElementById('upload-form');
+        const uploadContainer = document.getElementById('upload-container');
+        const fileInput = document.getElementById('file-input');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const changeImageBtn = document.getElementById('change-image-btn');
+        const animalTypeInput = document.getElementById('animal-type');
+        const animalCards = document.querySelectorAll('.animal-card');
+        const resultContainer = document.getElementById('result-container');
+        const resultImage = document.getElementById('result-image');
+        const detectedBreed = document.getElementById('detected-breed');
+        const confidenceValue = document.getElementById('confidence-value');
+        const confidenceLevel = document.getElementById('confidence-level');
+        const breedDescription = document.getElementById('breed-description');
+        const otherBreedsContainer = document.getElementById('other-breeds-container');
+        const otherBreedsRow = document.getElementById('other-breeds-row');
+        const backButton = document.getElementById('back-button');
+
+        // Handle form submission
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Analyzing...';
+            submitBtn.disabled = true;
+            
+            // Prepare form data
+            const formData = new FormData(this);
+            
+            // Submit form via AJAX
+            fetch('/breed/predict?format=json', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Display the results
+                displayResults(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Show error message with SweetAlert2
+                Swal.fire({
+                    title: 'Image Analysis Error',
+                    html: 'We encountered a problem analyzing your image. This could be due to:<br>' +
+                          '• Image corruption or format issues<br>' +
+                          '• Poor image quality or lighting<br>' +
+                          '• The animal type not matching the selected option<br><br>' +
+                          'Please try uploading a different image or selecting a different animal type.',
+                    icon: 'error',
+                    confirmButtonText: 'Try Again',
+                    confirmButtonColor: '#157347'
+                });
+            });
+        });
+        
+        // Display results function
+        function displayResults(data) {
+            if (data.status === 'error') {
+                // Show error message with SweetAlert2
+                Swal.fire({
+                    title: 'Image Analysis Error',
+                    html: data.error || 'We encountered a problem analyzing your image.',
+                    icon: 'error',
+                    confirmButtonText: 'Try Again',
+                    confirmButtonColor: '#157347'
+                });
+            } else {
+                // Update result image with proper error handling
+                if (data.image_url) {
+                    resultImage.onload = function() {
+                        // Image loaded successfully
+                        resultImage.style.display = 'block';
+                    };
+                    resultImage.onerror = function() {
+                        console.error('Error loading result image');
+                        resultImage.style.display = 'none';
+                    };
+                    resultImage.src = data.image_url;
+                } else {
+                    console.error('No image URL in response');
+                    resultImage.style.display = 'none';
+                }
+                
+                // Update result elements
+                detectedBreed.textContent = data.breed;
+                confidenceValue.textContent = parseFloat(data.confidence).toFixed(1);
+                confidenceLevel.style.width = data.confidence.replace('%', '') + '%';
+                
+                // Show breed characteristics
+                if (data.characteristics && Object.keys(data.characteristics).length > 0) {
+                    let descriptionHTML = '';
+                    
+                    // Add note about prediction method
+                    if (data.prediction_method === 'tensorflow') {
+                        descriptionHTML += `<div class="alert alert-success mb-3">
+                            <i class="fas fa-brain me-2"></i> This prediction was made using our trained AI model.
+                            The model has been trained on various ${data.animal_type} breeds to provide accurate identification.
+                        </div>`;
+                    } else {
+                        descriptionHTML += `<div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i> This prediction uses a rule-based system that analyzes colors and patterns in your image. 
+                            It is not a trained AI model but provides a good approximation based on visual characteristics.
+                        </div>`;
+                    }
+                    
+                    // Add description if available
+                    if (data.characteristics.description) {
+                        descriptionHTML += `<p class="fw-bold">${data.characteristics.description}</p>`;
+                    }
+                    
+                    // Add other characteristics
+                    let characteristicsHTML = '<dl class="row mb-0">';
+                    for (const [key, value] of Object.entries(data.characteristics)) {
+                        if (key !== 'description' && key !== 'note') {
+                            const formattedKey = key.replace(/_/g, ' ')
+                                .split(' ')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                .join(' ');
+                            characteristicsHTML += `
+                                <dt class="col-sm-4">${formattedKey}:</dt>
+                                <dd class="col-sm-8">${value}</dd>
+                            `;
+                        }
+                    }
+                    characteristicsHTML += '</dl>';
+                    
+                    breedDescription.innerHTML = descriptionHTML + characteristicsHTML;
+                } else {
+                    breedDescription.innerHTML = '<p>No detailed characteristics available for this breed.</p>';
+                }
+                
+                // Show other breeds predictions
+                if (data.all_predictions && data.all_predictions.length > 1) {
+                    otherBreedsRow.innerHTML = '';
+                    
+                    // Skip the first prediction as it's already shown
+                    for (let i = 1; i < data.all_predictions.length; i++) {
+                        const prediction = data.all_predictions[i];
+                        const confidence = typeof prediction.confidence === 'number' 
+                            ? prediction.confidence.toFixed(1) 
+                            : parseFloat(prediction.confidence).toFixed(1);
+                        
+                        otherBreedsRow.innerHTML += `
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${prediction.breed}</h5>
+                                        <div class="d-flex align-items-center">
+                                            <div class="confidence-bar me-2">
+                                                <div class="confidence-level" style="width: ${confidence}%;"></div>
+                                            </div>
+                                            <span class="confidence-text">${confidence}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    otherBreedsContainer.classList.remove('d-none');
+                } else {
+                    otherBreedsContainer.classList.add('d-none');
+                }
+                
+                // Show result container
+                resultContainer.classList.remove('d-none');
+                
+                // Ensure the image is visible after container is shown
+                setTimeout(() => {
+                    if (resultImage.src) {
+                        resultImage.style.display = 'block';
+                    }
+                }, 100);
+                
+                // Scroll to results
+                resultContainer.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+        
+        // Back button resets the form
+        backButton.addEventListener('click', function() {
+            resultContainer.classList.add('d-none');
+            otherBreedsContainer.classList.add('d-none');
+            uploadForm.reset();
+            imagePreviewContainer.classList.add('d-none');
+            uploadContainer.classList.remove('d-none');
+        });
+
+        // Handle animal type selection
+        animalCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove 'selected' class from all cards
+                animalCards.forEach(c => c.classList.remove('selected'));
+                
+                // Add 'selected' class to clicked card
+                this.classList.add('selected');
+                
+                // Update hidden input with selected animal type
+                const animalType = this.getAttribute('data-animal-type');
+                animalTypeInput.value = animalType;
+                
+                // Update upload message based on animal type
+                let uploadMessage = "Identify Breed";
+                if (animalType === 'cow') {
+                    uploadMessage = "Identify Cow Breed";
+                } else if (animalType === 'goat') {
+                    uploadMessage = "Identify Goat Breed";
+                } else if (animalType === 'chicken') {
+                    uploadMessage = "Identify Chicken Breed";
+                }
+                
+                document.querySelector("button[type='submit']").innerHTML = 
+                    `<i class="fas fa-search me-1"></i> ${uploadMessage}`;
+            });
+        });
+
+        // Handle click on upload container
+        uploadContainer.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle drag and drop
+        uploadContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadContainer.classList.add('dragover');
+        });
+
+        uploadContainer.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadContainer.classList.remove('dragover');
+        });
+
+        uploadContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadContainer.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                showPreview(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Show image preview when a file is selected
+        fileInput.addEventListener('change', (e) => {
+            if (fileInput.files.length) {
+                showPreview(fileInput.files[0]);
+            }
+        });
+
+        // Change image button functionality
+        changeImageBtn.addEventListener('click', () => {
+            imagePreviewContainer.classList.add('d-none');
+            uploadContainer.classList.remove('d-none');
+            fileInput.value = '';
+        });
+
+        // Function to show image preview
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                uploadContainer.classList.add('d-none');
+                imagePreviewContainer.classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Save Results button handler - updated to use client-side PDF generation
+        document.getElementById('save-results').addEventListener('click', function() {
+            // Get the result data
+            const breed = document.getElementById('detected-breed').textContent;
+            const confidence = document.getElementById('confidence-value').textContent + '%';
+            const animalType = document.getElementById('animal-type').value;
+            const resultImage = document.getElementById('result-image');
+            
+            // Get characteristics from the breed description
+            const characteristicItems = {};
+            const dtElements = document.querySelectorAll('#breed-description dt');
+            dtElements.forEach(dt => {
+                const key = dt.textContent.replace(':', '');
+                const value = dt.nextElementSibling ? dt.nextElementSibling.textContent : '';
+                characteristicItems[key] = value;
+            });
+            
+            // Create a description text
+            let descriptionText = '';
+            const descriptionParagraph = document.querySelector('#breed-description p.fw-bold');
+            if (descriptionParagraph) {
+                descriptionText = descriptionParagraph.textContent;
+            }
+            
+            // Show loading state
+            Swal.fire({
+                title: 'Generating PDF...',
+                text: 'Please wait while we prepare your report.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                    // Generate PDF on a slight delay to ensure the loading state shows
+                    setTimeout(() => generatePDF(breed, confidence, animalType, resultImage, characteristicItems, descriptionText), 200);
+                }
+            });
+        });
+
+        // Function to generate PDF directly in the browser
+        function generatePDF(breed, confidence, animalType, resultImage, characteristics, description) {
+            try {
+                // Create new PDF document
+                const doc = new jsPDF();
+                const timestamp = new Date().toLocaleString();
+                let yPos = 20;
+                
+                // Add title and timestamp
+                doc.setFontSize(22);
+                doc.setTextColor(21, 115, 71); // Green color
+                doc.text('Breed Identification Report', 105, yPos, { align: 'center' });
+                yPos += 10;
+                
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100); // Gray color
+                doc.text(`Generated on ${timestamp}`, 105, yPos, { align: 'center' });
+                yPos += 15;
+                
+                // Add identification results
+                doc.setFontSize(16);
+                doc.setTextColor(21, 115, 71);
+                doc.text('Identification Result', 20, yPos);
+                yPos += 10;
+                
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Breed: ${breed}`, 25, yPos);
+                yPos += 8;
+                doc.text(`Confidence: ${confidence}`, 25, yPos);
+                yPos += 8;
+                doc.text(`Animal Type: ${animalType.charAt(0).toUpperCase() + animalType.slice(1)}`, 25, yPos);
+                yPos += 15;
+                
+                // Add the image if available
+                if (resultImage && resultImage.complete && resultImage.naturalWidth !== 0) {
+                    try {
+                        html2canvas(resultImage).then(canvas => {
+                            const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                            
+                            // Get image dimensions while maintaining aspect ratio
+                            const imgWidth = 170;
+                            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                            
+                            // Add image centered on the page
+                            doc.addImage(imgData, 'JPEG', (210 - imgWidth) / 2, yPos, imgWidth, imgHeight);
+                            yPos += imgHeight + 15;
+                            
+                            // Continue with the rest of the PDF after image is processed
+                            finishPDF();
+                        });
+                    } catch (imgErr) {
+                        console.error("Error adding image to PDF:", imgErr);
+                        // Continue without the image
+                        finishPDF();
+                    }
+                } else {
+                    // Continue without the image
+                    finishPDF();
+                }
+                
+                function finishPDF() {
+                    // Add breed characteristics section
+                    doc.setFontSize(16);
+                    doc.setTextColor(21, 115, 71);
+                    doc.text('Breed Characteristics', 20, yPos);
+                    yPos += 10;
+                    
+                    // Add description if available
+                    if (description) {
+                        doc.setFontSize(12);
+                        doc.setTextColor(0, 0, 0);
+                        
+                        // Handle text wrapping for description
+                        const splitDescription = doc.splitTextToSize(description, 170);
+                        doc.text(splitDescription, 25, yPos);
+                        yPos += (splitDescription.length * 7) + 5;
+                    }
+                    
+                    // Add characteristics table
+                    doc.setFontSize(12);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    // Determine if we need a new page
+                    if (yPos > 250) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    
+                    Object.entries(characteristics).forEach(([key, value]) => {
+                        // Check if we need a new page
+                        if (yPos > 270) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        doc.setFont(undefined, 'bold');
+                        doc.text(`${key}:`, 25, yPos);
+                        doc.setFont(undefined, 'normal');
+                        
+                        // Handle text wrapping for value
+                        const splitValue = doc.splitTextToSize(value, 150);
+                        doc.text(splitValue, 60, yPos);
+                        yPos += (splitValue.length * 7) + 5;
+                    });
+                    
+                    // Add footer
+                    const pageCount = doc.getNumberOfPages();
+                    for (let i = 1; i <= pageCount; i++) {
+                        doc.setPage(i);
+                        doc.setFontSize(8);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text('© Livestock Health Livestock Identification System', 105, 290, { align: 'center' });
+                        doc.text(`Page ${i} of ${pageCount}`, 195, 290, { align: 'right' });
+                    }
+                    
+                    // Save the PDF
+                    const filename = `${animalType}_${breed.replace(/\s+/g, '_')}_report.pdf`.toLowerCase();
+                    doc.save(filename);
+                    
+                    // Close the loading dialog
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Your results have been saved as a PDF.',
+                    });
+                }
+            } catch (error) {
+                console.error("PDF generation error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to generate PDF. Please try again later.',
+                });
+            }
+        }
+        
+        // More Info button handler
+        document.getElementById('view-more-info').addEventListener('click', function() {
+            const breed = document.getElementById('detected-breed').textContent;
+            const animalType = document.getElementById('animal-type').value;
+            
+            // Show loading state
+            const modal = new bootstrap.Modal(document.getElementById('moreInfoModal'));
+            modal.show();
+            
+            // Fetch additional information
+            fetch(`/breed/more_info/${animalType}/${breed}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const info = data.data;
+                        
+                        // Update modal content
+                        document.querySelector('.breed-history-text').textContent = info.history;
+                        
+                        // Update physical traits
+                        const traitslist = document.querySelector('.physical-traits-list');
+                        traitslist.innerHTML = info.physical_traits.map(trait => `<li>${trait}</li>`).join('');
+                        
+                        // Update advantages
+                        const advantagesList = document.querySelector('.advantages-list');
+                        advantagesList.innerHTML = info.advantages.map(adv => `<li>${adv}</li>`).join('');
+                        
+                        // Update care tips
+                        const careTipsList = document.querySelector('.care-tips-list');
+                        careTipsList.innerHTML = info.care_tips.map(tip => `<li>${tip}</li>`).join('');
+                        
+                        // Update resources
+                        const resourcesList = document.querySelector('.resources-list');
+                        resourcesList.innerHTML = info.resources.map(resource => 
+                            `<li><a href="${resource.url}" target="_blank">${resource.name}</a></li>`
+                        ).join('');
+                    } else {
+                        throw new Error(data.error || 'Failed to load additional information');
+                    }
+                })
+                .catch(error => {
+            Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Failed to load additional information',
+                    });
+            });
+        });
+    });
+</script>
+{% endblock %} 
